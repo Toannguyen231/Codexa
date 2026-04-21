@@ -97,6 +97,21 @@
   color: var(--accent);
 }
 
+/* Connection status dot */
+.conn-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #484f58;
+  flex-shrink: 0;
+  transition: background 0.3s;
+}
+
+.conn-dot.connected {
+  background: #2cbb5d;
+  box-shadow: 0 0 6px rgba(44, 187, 93, 0.5);
+}
+
 /* Center */
 .header-center {
   display: flex;

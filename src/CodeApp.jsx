@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useParams } from 'react-router-dom';
 import './App.css';
 
 import Header from './component/Header/Header';
@@ -6,116 +7,183 @@ import Sidebar from './component/Sidebar/Sidebar';
 import CodeEditor from './component/Editor/CodeEditor';
 import OutputPanel from './component/OutputPanel/OutputPanel';
 import { executeCode } from './component/Header/api';
+import useSocket from './hooks/useSocket';
 
 // Code mẫu mặc định cho từng ngôn ngữ
 const DEFAULT_CODE = {
-  'C++': `#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << "Hello, World!" << endl;\n    return 0;\n}`,
-  'Python': `def main():\n    print("Hello, World!")\n\nif __name__ == "__main__":\n    main()`,
-  'Java': `public class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello, World!");\n    }\n}`,
-  'JavaScript': `function main() {\n    console.log("Hello, World!");\n}\n\nmain();`,
-  'TypeScript': `function main(): void {\n    console.log("Hello, World!");\n}\n\nmain();`,
-  'C#': `using System;\n\nclass Program {\n    static void Main() {\n        Console.WriteLine("Hello, World!");\n    }\n}`,
-  'PHP': `<?php\n\necho "Hello, World!\\n";\n\n?>`,
+    'C++': `#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << "Hello, World!" << endl;\n    return 0;\n}`,
+    'Python': `def main():\n    print("Hello, World!")\n\nif __name__ == "__main__":\n    main()`,
+    'Java': `public class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello, World!");\n    }\n}`,
+    'JavaScript': `function main() {\n    console.log("Hello, World!");\n}\n\nmain();`,
+    'TypeScript': `function main(): void {\n    console.log("Hello, World!");\n}\n\nmain();`,
+    'C#': `using System;\n\nclass Program {\n    static void Main() {\n        Console.WriteLine("Hello, World!");\n    }\n}`,
+    'PHP': `<?php\n\necho "Hello, World!\\n";\n\n?>`,
 };
 
-const ROOM_ID = 'ABC-123';
-
 function CodeApp() {
+    // Lấy roomId từ URL params: /room/:id
+    const { id: roomId } = useParams();
+
+    // Lấy JWT token từ localStorage (được lưu khi login)
+    const token = localStorage.getItem('token') || '';
+
     const [language, setLanguage] = useState('C++');
     const [code, setCode] = useState(DEFAULT_CODE['C++']);
     const [output, setOutput] = useState('');
     const [isRunning, setIsRunning] = useState(false);
 
-    // Khi đổi ngôn ngữ → reset code về mẫu mặc định
-    const handleLanguageChange = (lang) => {
-        setLanguage(lang);
-        setCode(DEFAULT_CODE[lang] || '');
-        setOutput('');
-    };
+    // ── Socket.IO kết nối realtime ──────────────────────────────────
+    const { socket, onlineUsers, isConnected } = useSocket(roomId, token);
 
-    const runJavaScript = (source) => {
-        const logs = [];
-        const originalConsoleLog = console.log;
-        const originalConsoleError = console.error;
+    // Ref để tránh vòng lặp: khi nhận code từ socket → không emit lại
+    const isRemoteChange = useRef(false);
 
-        const safeConsole = {
-            log: (...args) => logs.push(args.map((item) => String(item)).join(' ')),
-            error: (...args) => logs.push(args.map((item) => String(item)).join(' ')),
+    // ── Lắng nghe code-sync từ server (user khác gõ) ───────────────
+    useEffect(() => {
+        if (!socket) return;
+
+        // Nhận code hiện tại khi vừa join room
+        socket.on('room-state', ({ code: roomCode, language: roomLang }) => {
+            isRemoteChange.current = true;
+            if (roomCode) setCode(roomCode);
+            if (roomLang) setLanguage(roomLang);
+            // Nếu phòng chưa có code → dùng default cho ngôn ngữ đó
+            if (!roomCode && roomLang) {
+                setCode(DEFAULT_CODE[roomLang] || '');
+            }
+        });
+
+        // Nhận code từ user khác đang gõ
+        socket.on('code-sync', ({ code: newCode }) => {
+            isRemoteChange.current = true;
+            setCode(newCode);
+        });
+
+        // Nhận thay đổi ngôn ngữ từ user khác
+        socket.on('language-sync', ({ language: newLang }) => {
+            setLanguage(newLang);
+            setCode(DEFAULT_CODE[newLang] || '');
+        });
+
+        // Nhận output từ user khác chạy code
+        socket.on('output-update', ({ output: newOutput, isRunning: running }) => {
+            if (running) {
+                setIsRunning(true);
+                setOutput('');
+            } else {
+                setIsRunning(false);
+                setOutput(newOutput);
+            }
+        });
+
+        return () => {
+            socket.off('room-state');
+            socket.off('code-sync');
+            socket.off('language-sync');
+            socket.off('output-update');
         };
+    }, [socket]);
 
-        try {
-            // Ghi đè console tạm thời để thu log
-            console.log = safeConsole.log;
-            console.error = safeConsole.error;
+    // ── Debounce: emit code-change chỉ sau 300ms không gõ ───────────
+    const debounceRef = useRef(null);
 
-            new Function(source)();
-        } catch (error) {
-            logs.push(`Error: ${error.message}`);
-        } finally {
-            console.log = originalConsoleLog;
-            console.error = originalConsoleError;
+    const emitCodeChange = useCallback((newCode) => {
+        if (isRemoteChange.current) {
+            // Code đến từ socket → không emit lại (tránh loop)
+            isRemoteChange.current = false;
+            return;
         }
+        if (!socket || !isConnected) return;
 
-        return logs.length > 0 ? logs.join('\n') : 'Chạy xong, không có output.';
-    };
+        clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => {
+            socket.emit('code-change', { roomId, code: newCode });
+        }, 300);
+    }, [socket, isConnected, roomId]);
 
+    // Wrapper cho setCode: vừa cập nhật state vừa emit socket
+    const handleCodeChange = useCallback((newCode) => {
+        setCode(newCode);
+        emitCodeChange(newCode);
+    }, [emitCodeChange]);
+
+    // ── Khi đổi ngôn ngữ → reset code + emit socket ───────────────
+    const handleLanguageChange = useCallback((lang) => {
+        setLanguage(lang);
+        const newCode = DEFAULT_CODE[lang] || '';
+        setCode(newCode);
+        setOutput('');
+        if (socket && isConnected) {
+            socket.emit('language-change', { roomId, language: lang });
+        }
+    }, [socket, isConnected, roomId]);
+
+    // ── Chạy code qua Judge0 + emit output cho user khác ───────────
     const handleRunCode = async () => {
         setIsRunning(true);
         setOutput('');
 
+        // Thông báo cho user khác biết đang chạy
+        if (socket && isConnected) {
+            socket.emit('output-sync', { roomId, output: '', isRunning: true });
+        }
+
         try {
             const result = await executeCode(language, code);
 
-            // Nếu API trả về lỗi RapidAPI hoặc không kèm token (thiếu key, limit vượt mức)
+            let runOutput = '';
             if (result.message && !result.status) {
-                setOutput(`Lỗi API: ${result.message}`);
-                return;
+                runOutput = `Lỗi API: ${result.message}`;
+            } else if (result.compile_output) {
+                runOutput = result.compile_output;
+            } else if (result.stderr) {
+                runOutput = result.stderr;
+            } else if (result.stdout !== null && result.stdout !== undefined) {
+                runOutput = result.stdout || "Done.";
+            } else if (result.status && result.status.description) {
+                runOutput = `Trạng thái: ${result.status.description}`;
+            } else {
+                runOutput = JSON.stringify(result, null, 2);
             }
 
-            // Xử lý output theo cấu trúc của Judge0
-            if (result.compile_output) {
-                setOutput(result.compile_output); // Lỗi biên dịch (C++, Java)
-            } else if (result.stderr) {
-                setOutput(result.stderr); // Lỗi khi chạy (Python, JS)
-            } else if (result.stdout !== null && result.stdout !== undefined) {
-                setOutput(result.stdout || "Done."); // Kết quả trả về thành công
-            } else if (result.status && result.status.description) {
-                setOutput(`Trạng thái: ${result.status.description}`); // Các fallback khác như Time Limit Exceeded
-            } else {
-                setOutput(JSON.stringify(result, null, 2));
+            setOutput(runOutput);
+            setIsRunning(false);
+
+            // Gửi output cho user khác trong phòng
+            if (socket && isConnected) {
+                socket.emit('output-sync', { roomId, output: runOutput, isRunning: false });
             }
         } catch (error) {
-            setOutput(`Error: ${error.message}`);
-        } finally {
+            const errMsg = `Error: ${error.message}`;
+            setOutput(errMsg);
             setIsRunning(false);
+            if (socket && isConnected) {
+                socket.emit('output-sync', { roomId, output: errMsg, isRunning: false });
+            }
         }
-    };
-
-    // Xóa output console
-    const handleClear = () => {
-        setOutput('');
-        setIsRunning(false);
     };
 
     return (
         <div className="app-shell">
             {/* ── Header ── */}
             <Header
-                roomId={ROOM_ID}
+                roomId={roomId}
                 language={language}
                 setLanguage={handleLanguageChange}
                 onRun={handleRunCode}
                 isRunning={isRunning}
+                isConnected={isConnected}
+                onlineUsers={onlineUsers}
             />
 
             {/* ── Main: Sidebar + Editor ── */}
             <div className="app-main">
-                <Sidebar />
+                <Sidebar onlineUsers={onlineUsers} />
 
                 <div className="editor-area">
                     <CodeEditor
                         code={code}
-                        setCode={setCode}
+                        setCode={handleCodeChange}
                         language={language}
                     />
 

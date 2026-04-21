@@ -1,29 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Sidebar.scss';
 import { FiChevronLeft, FiChevronRight, FiUsers } from 'react-icons/fi';
 
-const MOCK_USERS = [
-  { id: 1, name: 'Nguyễn Toàn', initials: 'NT', color: '#4caf50', online: true, role: 'Host' },
-  { id: 2, name: 'Trần Minh', initials: 'TM', color: '#2196f3', online: true, role: 'Guest' },
-  { id: 3, name: 'Lê Hoa', initials: 'LH', color: '#ff9800', online: false, role: 'Guest' },
-  { id: 4, name: 'Phạm Dũng', initials: 'PD', color: '#e91e63', online: false, role: 'Guest' },
-];
+// Màu avatar cho user online (xoay vòng)
+const AVATAR_COLORS = ['#4caf50', '#2196f3', '#ff9800', '#e91e63', '#9c27b0', '#00bcd4'];
 
-const Sidebar = () => {
+// Lấy 2 ký tự đầu làm initials
+const getInitials = (name) => name ? name.slice(0, 2).toUpperCase() : '??';
+
+const Sidebar = ({ onlineUsers = [] }) => {
   const [collapsed, setCollapsed] = useState(false);
 
-  const onlineCount = MOCK_USERS.filter((u) => u.online).length;
+
+  useEffect(() => {
+    console.log('Sidebar mounted with onlineUsers:', onlineUsers);
+  }, [onlineUsers]);
 
   return (
     <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
       {/* Header */}
       <div className="sidebar-header">
-        {!collapsed && (
-          <span className="sidebar-title">
-            <FiUsers size={11} style={{ marginRight: 5 }} />
-            Participants
-          </span>
-        )}
+        <span className="sidebar-title">
+          <FiUsers size={11} style={{ marginRight: 5 }} />
+          {!collapsed ? 'Participants' : ''}
+        </span>
         <button
           className="toggle-btn"
           onClick={() => setCollapsed(!collapsed)}
@@ -35,27 +35,31 @@ const Sidebar = () => {
 
       {/* User List */}
       <div className="user-list">
-        {MOCK_USERS.map((user) => (
-          <div key={user.id} className="user-item" title={collapsed ? user.name : ''}>
-            <div className="user-avatar-sm" style={{ backgroundColor: user.color }}>
-              {user.initials}
-              <span className={`status-dot ${user.online ? 'online' : 'offline'}`} />
+        {onlineUsers.length > 0 ? onlineUsers.map((user, idx) => (
+          <div key={user.socketId} className="user-item" title={collapsed ? user.username : ''}>
+            <div className="user-avatar-sm" style={{ backgroundColor: AVATAR_COLORS[idx % AVATAR_COLORS.length] }}>
+              {getInitials(user.username)}
+              <span className="status-dot online" />
             </div>
             <div className="user-info">
-              <div className="user-name">{user.name}</div>
-              <div className={`user-status-text ${user.online ? 'online-text' : ''}`}>
-                {user.online ? '● Online' : '○ Offline'} · {user.role}
+              <div className="user-name">{user.username}</div>
+              <div className="user-status-text online-text">
+                ● Online
               </div>
             </div>
           </div>
-        ))}
+        )) : (
+          <div style={{ padding: '12px 14px', color: 'var(--text-dim)', fontSize: '12px' }}>
+            Chưa có ai trong phòng
+          </div>
+        )}
       </div>
 
       {/* Footer */}
       <div className="sidebar-footer">
         <div className="online-summary">
           <span className="online-dot" />
-          <span>{onlineCount} / {MOCK_USERS.length} online</span>
+          <span>{onlineUsers.length} online</span>
         </div>
       </div>
     </aside>

@@ -1,24 +1,20 @@
 import React, { useState } from 'react';
 import './Header.scss';
 import { FiPlay, FiShare2, FiCopy, FiCheck, FiChevronDown } from 'react-icons/fi';
-import { LiaEarlybirds } from 'react-icons/lia';
 import { LiaAccessibleIcon } from "react-icons/lia";
 import { LANGUAGE_VERSION, LANGUAGE_DISPLAY_NAME } from './constants';
 import LanguageSelector from './LanguageSelector';
 
-const languageOptions = Object.entries(LANGUAGE_VERSION).map(([key, version]) => ({
-  key,
-  label: LANGUAGE_DISPLAY_NAME[key] || key,
-  version,
-}));
-
-const MOCK_USERS = [
-  { id: 1, name: 'Nguyễn Toàn', initials: 'NT', color: '#4caf50', online: true },
-  { id: 2, name: 'Trần Minh', initials: 'TM', color: '#2196f3', online: true },
-];
-
-const Header = ({ onRun, isRunning, language, setLanguage, roomId }) => {
+const Header = ({ onRun, isRunning, language, setLanguage, roomId, isConnected, onlineUsers = [] }) => {
   const [copied, setCopied] = useState(false);
+
+  const onlineUserList = onlineUsers.map((u, idx) => ({
+    id: idx,
+    name: u.username,
+    initials: u.username ? u.username.slice(0, 2).toUpperCase() : '??',
+    color: ['#4caf50', '#2196f3', '#ff9800', '#e91e63', '#9c27b0', '#00bcd4'][idx % 6],
+    online: true,
+  }));
 
   const handleCopy = () => {
     navigator.clipboard.writeText(roomId || 'ABC-123').catch(() => { });
@@ -47,6 +43,7 @@ const Header = ({ onRun, isRunning, language, setLanguage, roomId }) => {
         <div className="room-badge">
           <span className="room-label">Room</span>
           <span className="room-id">{roomId || 'ABC-123'}</span>
+          <span className={`conn-dot ${isConnected ? 'connected' : ''}`} title={isConnected ? 'Connected' : 'Disconnected'} />
           <button
             className={`copy-btn ${copied ? 'copied' : ''}`}
             onClick={handleCopy}
@@ -62,7 +59,6 @@ const Header = ({ onRun, isRunning, language, setLanguage, roomId }) => {
           <LanguageSelector
             language={language}
             setLanguage={setLanguage}
-            options={languageOptions}
           />
           <FiChevronDown
             size={12}
@@ -87,7 +83,7 @@ const Header = ({ onRun, isRunning, language, setLanguage, roomId }) => {
       {/* RIGHT */}
       <div className="header-right">
         <div className="user-avatars">
-          {MOCK_USERS.filter((u) => u.online).map((u) => (
+          {onlineUserList.filter((u) => u.online).map((u) => (
             <div
               key={u.id}
               className="user-avatar"
@@ -99,7 +95,7 @@ const Header = ({ onRun, isRunning, language, setLanguage, roomId }) => {
           ))}
         </div>
         <span className="user-count-badge">
-          {MOCK_USERS.filter((u) => u.online).length} online
+          {onlineUserList.filter((u) => u.online).length} online
         </span>
 
         <div className="divider-v" />
