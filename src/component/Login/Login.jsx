@@ -30,7 +30,6 @@ const Login = () => {
             const res = await fetch(`${API_URL}${endpoint}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
                 body: JSON.stringify(body),
             });
 
@@ -60,7 +59,6 @@ const Login = () => {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${data.token}`,
                     },
-                    credentials: 'include',
                 });
                 console.log('Room API response status:', roomRes.status);
                 const roomData = await roomRes.json();
@@ -74,7 +72,8 @@ const Login = () => {
                 }
             }
         } catch (err) {
-            setError('Không thể kết nối server. Đảm bảo backend đang chạy.');
+            console.error('Login error:', err);
+            setError('Không thể kết nối server: ' + err.message);
         } finally {
             setLoading(false);
         }

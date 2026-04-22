@@ -2,11 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
 
 // src/hooks/useSocket.js (hoặc file tương ứng của bạn)
-const SERVER_URL = 'http://localhost:5175'; // Đổi từ 3001 thành 5000
-const PORT = 5000;
-server.listen(PORT, () => {
-  console.log(`Server đang chạy tại: http://localhost:${PORT}`);
-});
+const SERVER_URL = 'http://localhost:3001';
+
 /**
  * Hook: useSocket — quản lý kết nối Socket.IO cho real-time code sync
  *
