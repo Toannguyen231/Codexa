@@ -1,12 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Header.scss';
-import { FiPlay, FiShare2, FiCopy, FiCheck, FiChevronDown } from 'react-icons/fi';
+import { FiPlay, FiShare2, FiCopy, FiCheck, FiChevronDown, FiLogOut, FiUser, FiClock } from 'react-icons/fi';
 import { LiaAccessibleIcon } from "react-icons/lia";
 import { LANGUAGE_VERSION, LANGUAGE_DISPLAY_NAME } from './constants';
 import LanguageSelector from './LanguageSelector';
 
-const Header = ({ onRun, isRunning, language, setLanguage, roomId, isConnected, onlineUsers = [] }) => {
+const Header = ({ onRun, isRunning, language, setLanguage, roomId, isConnected, onlineUsers = [], currentUser = {}, onOpenHistory }) => {
   const [copied, setCopied] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef(null);
+  const navigate = useNavigate();
 
   const onlineUserList = onlineUsers.map((u, idx) => ({
     id: idx,
@@ -16,6 +21,17 @@ const Header = ({ onRun, isRunning, language, setLanguage, roomId, isConnected, 
     online: true,
   }));
 
+  // Đóng dropdown khi click ngoài
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setProfileOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const handleCopy = () => {
     navigator.clipboard.writeText(roomId || 'ABC-123').catch(() => { });
     setCopied(true);
@@ -24,10 +40,22 @@ const Header = ({ onRun, isRunning, language, setLanguage, roomId, isConnected, 
 
 
   const handleShare = () => {
-    const link = `${window.location.origin}?room=${roomId || 'ABC-123'}`;
+    const link = `${window.location.origin}/room/${roomId}`;
     navigator.clipboard.writeText(link).catch(() => { });
-    alert(`🔗 Đã copy link tham gia:\n${link}`);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2500);
   };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setProfileOpen(false);
+    navigate('/');
+  };
+
+  const userInitials = currentUser.username
+    ? currentUser.username.slice(0, 2).toUpperCase()
+    : '??';
 
   return (
     <header className="header">
@@ -100,10 +128,49 @@ const Header = ({ onRun, isRunning, language, setLanguage, roomId, isConnected, 
 
         <div className="divider-v" />
 
-        <button id="btn-share" className="btn-share" onClick={handleShare}>
-          <FiShare2 size={13} />
-          Share
+        <button id="btn-share" className={`btn-share ${copiedLink ? 'copied' : ''}`} onClick={handleShare}>
+          {copiedLink ? <FiCheck size={13} /> : <FiShare2 size={13} />}
+          {copiedLink ? 'Link copied!' : 'Share'}
         </button>
+
+        <div className="divider-v" />
+
+        <button className="btn-history" onClick={onOpenHistory} title="Lịch sử code">
+          <FiClock size={13} />
+          History
+        </button>
+
+        <div className="divider-v" />
+
+        {/* User Profile Dropdown */}
+        <div className="profile-dropdown" ref={profileRef}>
+          <button
+            className="profile-trigger"
+            onClick={() => setProfileOpen(!profileOpen)}
+          >
+            <div className="profile-avatar">{userInitials}</div>
+            <FiChevronDown size={12} />
+          </button>
+
+          {profileOpen && (
+            <div className="profile-menu">
+              <div className="profile-menu-header">
+                <div className="profile-avatar-lg">{userInitials}</div>
+                <div className="profile-details">
+                  <div className="profile-name">{currentUser.username || 'User'}</div>
+                  <div className="profile-email">{currentUser.email || ''}</div>
+                </div>
+              </div>
+              <div className="profile-menu-divider" />
+              <button className="profile-menu-item" onClick={() => setProfileOpen(false)}>
+                <FiUser size={13} /> Profile
+              </button>
+              <button className="profile-menu-item logout" onClick={handleLogout}>
+                <FiLogOut size={13} /> Log out
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );

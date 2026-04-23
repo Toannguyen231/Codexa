@@ -6,6 +6,7 @@ import Header from './component/Header/Header';
 import Sidebar from './component/Sidebar/Sidebar';
 import CodeEditor from './component/Editor/CodeEditor';
 import OutputPanel from './component/OutputPanel/OutputPanel';
+import HistoryPanel from './component/History/HistoryPanel';
 import { executeCode } from './component/Header/api';
 import useSocket from './hooks/useSocket';
 
@@ -24,13 +25,23 @@ function CodeApp() {
     // Lấy roomId từ URL params: /room/:id
     const { id: roomId } = useParams();
 
-    // Lấy JWT token từ localStorage (được lưu khi login)
-    const token = localStorage.getItem('token') || '';
+    // Lấy JWT token từ localStorage 1 lần duy nhất khi mount
+    // Dùng useState lazy init để tránh re-read trên mỗi render
+    // (nếu dùng biến thường, tab khác login sẽ ghi đè localStorage → token đổi → socket reconnect sai user)
+    const [token] = useState(() => localStorage.getItem('token') || '');
+
+    // Lấy thông tin user hiện tại từ localStorage (1 lần khi mount)
+    const [currentUser] = useState(() => {
+        try {
+            return JSON.parse(localStorage.getItem('user')) || {};
+        } catch { return {}; }
+    });
 
     const [language, setLanguage] = useState('C++');
     const [code, setCode] = useState(DEFAULT_CODE['C++']);
     const [output, setOutput] = useState('');
     const [isRunning, setIsRunning] = useState(false);
+    const [showHistory, setShowHistory] = useState(false);
 
     // ── Socket.IO kết nối realtime ──────────────────────────────────
     const { socket, onlineUsers, isConnected } = useSocket(roomId, token);
@@ -163,8 +174,34 @@ function CodeApp() {
         }
     };
 
+    // ── Khôi phục code từ snapshot lịch sử ───────────────────────
+    const handleRestore = useCallback((restoredCode, restoredLang) => {
+        isRemoteChange.current = true;
+        setCode(restoredCode);
+        setLanguage(restoredLang);
+        if (socket && isConnected) {
+            socket.emit('code-change', { roomId, code: restoredCode });
+            socket.emit('language-change', { roomId, language: restoredLang });
+        }
+    }, [socket, isConnected, roomId]);
+
     return (
         <div className="app-shell">
+            {/* ── History Panel (modal) ── */}
+            {showHistory && (
+                <HistoryPanel
+                    roomId={roomId}
+                    token={token}
+                    onRestore={handleRestore}
+                    onClose={() => setShowHistory(false)}
+                    socket={socket}
+                    isConnected={isConnected}
+                    currentCode={code}
+                    currentLanguage={language}
+                    currentUser={currentUser}
+                />
+            )}
+
             {/* ── Header ── */}
             <Header
                 roomId={roomId}
@@ -174,11 +211,19 @@ function CodeApp() {
                 isRunning={isRunning}
                 isConnected={isConnected}
                 onlineUsers={onlineUsers}
+                currentUser={currentUser}
+                onOpenHistory={() => setShowHistory(true)}
             />
 
             {/* ── Main: Sidebar + Editor ── */}
             <div className="app-main">
-                <Sidebar onlineUsers={onlineUsers} />
+                <Sidebar
+                    onlineUsers={onlineUsers}
+                    currentUser={currentUser}
+                    roomId={roomId}
+                    socket={socket}
+                    isConnected={isConnected}
+                />
 
                 <div className="editor-area">
                     <CodeEditor
