@@ -1,0 +1,95 @@
+.editor-settings-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+
+  .editor-settings-modal {
+    background-color: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 8px;
+    width: 320px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    color: #e0e0e0;
+
+    .settings-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      
+      h3 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 500;
+      }
+      
+      .btn-close {
+        background: none;
+        border: none;
+        color: #888;
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 4px;
+        
+        &:hover {
+          background-color: #333;
+          color: #fff;
+        }
+      }
+    }
+
+    .settings-body {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+
+      .setting-group {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        label {
+          font-size: 14px;
+          color: #ccc;
+        }
+
+        select, input[type="number"] {
+          background-color: #2d2d2d;
+          border: 1px solid #444;
+          color: #eee;
+          padding: 6px 10px;
+          border-radius: 4px;
+          font-size: 13px;
+          outline: none;
+          
+          &:focus {
+            border-color: #2196f3;
+          }
+        }
+
+        input[type="number"] {
+          width: 60px;
+        }
+
+        &.checkbox {
+          justify-content: flex-start;
+          gap: 12px;
+          
+          input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #2196f3;
+          }
+        }
+      }
+    }
+  }
+}

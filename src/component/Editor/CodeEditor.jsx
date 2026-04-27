@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
 import './CodeEditor.scss';
 import { FiRotateCcw, FiCopy } from 'react-icons/fi';
@@ -20,8 +20,86 @@ const languageMap = {
   PHP: 'php',
 };
 
-const CodeEditor = ({ code, setCode, language }) => {
+const CodeEditor = ({ code, setCode, language, socket, roomId, currentUser, settings }) => {
   const monacoLanguage = languageMap[language] || 'plaintext';
+  
+  const editorRef = useRef(null);
+  const monacoRef = useRef(null);
+  const cursorsRef = useRef({});
+  const decorationsIdRef = useRef([]);
+
+  const updateDecorations = () => {
+    if (!editorRef.current || !monacoRef.current) return;
+    
+    const newDecs = Object.values(cursorsRef.current).map(c => {
+       return {
+          range: new monacoRef.current.Range(c.position.lineNumber, c.position.column, c.position.lineNumber, c.position.column),
+          options: {
+             className: 'remote-cursor',
+             hoverMessage: { value: `User: ${c.username}` }
+          }
+       };
+    });
+    
+    decorationsIdRef.current = editorRef.current.deltaDecorations(decorationsIdRef.current, newDecs);
+  };
+
+  const handleEditorDidMount = (editor, monaco) => {
+    editorRef.current = editor;
+    monacoRef.current = monaco;
+
+    editor.onDidChangeCursorPosition((e) => {
+      if (socket && roomId) {
+        socket.emit('cursor-move', {
+          roomId,
+          cursorData: { position: e.position }
+        });
+      }
+    });
+
+    // Also send cursor initially after mounting if desired
+  };
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleCursorUpdate = ({ socketId, username, position }) => {
+      // Don't show own cursor
+      if (socketId === socket.id) return;
+
+      if (cursorsRef.current[socketId] && cursorsRef.current[socketId].timeout) {
+          clearTimeout(cursorsRef.current[socketId].timeout);
+      }
+
+      cursorsRef.current[socketId] = {
+         username,
+         position,
+         timeout: setTimeout(() => {
+             delete cursorsRef.current[socketId];
+             updateDecorations();
+         }, 5000) // remove after 5s idle
+      };
+
+      updateDecorations();
+    };
+    
+    const handleUserLeft = ({ username }) => {
+        Object.keys(cursorsRef.current).forEach(sid => {
+            if (cursorsRef.current[sid].username === username) {
+                clearTimeout(cursorsRef.current[sid].timeout);
+                delete cursorsRef.current[sid];
+            }
+        });
+        updateDecorations();
+    };
+
+    socket.on('cursor-update', handleCursorUpdate);
+    socket.on('user-left', handleUserLeft);
+    return () => {
+      socket.off('cursor-update', handleCursorUpdate);
+      socket.off('user-left', handleUserLeft);
+    };
+  }, [socket, currentUser]);
 
   const handleReset = () => {
     if (window.confirm('Reset code về mặc định?')) {
@@ -54,14 +132,16 @@ const CodeEditor = ({ code, setCode, language }) => {
         <Editor
           height="100%"
           language={monacoLanguage}
-          theme="vs-dark"
+          theme={settings?.theme || 'vs-dark'}
           value={code}
           onChange={(value = '') => setCode(value)}
+          onMount={handleEditorDidMount}
           options={{
-            minimap: { enabled: false },
+            minimap: { enabled: settings?.minimap || false },
+            fontSize: settings?.fontSize || 14,
             automaticLayout: true,
             scrollBeyondLastLine: false,
-            wordWrap: 'on',
+            wordWrap: settings?.wordWrap || 'on',
           }}
         />
       </div>

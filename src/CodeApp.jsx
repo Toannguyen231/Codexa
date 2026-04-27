@@ -7,6 +7,7 @@ import Sidebar from './component/Sidebar/Sidebar';
 import CodeEditor from './component/Editor/CodeEditor';
 import OutputPanel from './component/OutputPanel/OutputPanel';
 import HistoryPanel from './component/History/HistoryPanel';
+import AIPanel from './component/AIPanel/AIPanel';
 import { executeCode } from './component/Header/api';
 import useSocket from './hooks/useSocket';
 
@@ -42,6 +43,16 @@ function CodeApp() {
     const [output, setOutput] = useState('');
     const [isRunning, setIsRunning] = useState(false);
     const [showHistory, setShowHistory] = useState(false);
+    const [aiOpen, setAIOpen] = useState(false);
+    const [stdin, setStdin] = useState('');
+    
+    // Editor settings state
+    const [editorSettings, setEditorSettings] = useState({
+        theme: 'vs-dark',
+        fontSize: 14,
+        minimap: false,
+        wordWrap: 'on'
+    });
 
     // ── Socket.IO kết nối realtime ──────────────────────────────────
     const { socket, onlineUsers, isConnected } = useSocket(roomId, token);
@@ -140,7 +151,7 @@ function CodeApp() {
         }
 
         try {
-            const result = await executeCode(language, code);
+            const result = await executeCode(language, code, stdin);
 
             let runOutput = '';
             if (result.message && !result.status) {
@@ -213,6 +224,10 @@ function CodeApp() {
                 onlineUsers={onlineUsers}
                 currentUser={currentUser}
                 onOpenHistory={() => setShowHistory(true)}
+                editorSettings={editorSettings}
+                setEditorSettings={setEditorSettings}
+                aiOpen={aiOpen}
+                setAIOpen={setAIOpen}
             />
 
             {/* ── Main: Sidebar + Editor ── */}
@@ -230,6 +245,10 @@ function CodeApp() {
                         code={code}
                         setCode={handleCodeChange}
                         language={language}
+                        socket={socket}
+                        roomId={roomId}
+                        currentUser={currentUser}
+                        settings={editorSettings}
                     />
 
                     {/* ── Output Panel ── */}
@@ -237,9 +256,20 @@ function CodeApp() {
                         output={output}
                         isRunning={isRunning}
                         onClear={() => setOutput('')}
+                        stdin={stdin}
+                        setStdin={setStdin}
                     />
                 </div>
             </div>
+
+            {/* ── AI Panel ── */}
+            {aiOpen && (
+                <AIPanel
+                    code={code}
+                    language={language}
+                    onClose={() => setAIOpen(false)}
+                />
+            )}
         </div>
     );
 }

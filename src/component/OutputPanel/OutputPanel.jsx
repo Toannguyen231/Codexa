@@ -6,7 +6,7 @@ const MIN_HEIGHT = 120;
 const MAX_HEIGHT = 500;
 const DEFAULT_HEIGHT = 220;
 
-const OutputPanel = ({ output, isRunning, onClear }) => {
+const OutputPanel = ({ output, isRunning, onClear, stdin, setStdin }) => {
   const [activeTab, setActiveTab] = useState('console');
   const [height, setHeight] = useState(DEFAULT_HEIGHT);
   const dragRef = useRef(null);
@@ -110,9 +110,20 @@ const OutputPanel = ({ output, isRunning, onClear }) => {
             <span className="console-empty">Nhấn "Run Code" để chạy chương trình...</span>
           )
         ) : (
-          <div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>
-            <p style={{ marginBottom: 8 }}>Chưa có test case nào được thêm.</p>
-            <p style={{ color: 'var(--text-dim)' }}>Tính năng này sẽ được bổ sung khi kết nối backend.</p>
+          <div className="testcase-area" style={{ height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
+            <label style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' }}>Input (stdin)</label>
+            <textarea 
+              value={stdin}
+              onChange={(e) => setStdin(e.target.value)}
+              className="stdin-textarea"
+              placeholder="Nhập input cho chương trình ở đây..."
+              style={{
+                flex: 1, backgroundColor: '#1e1e1e', color: '#d4d4d4', 
+                border: '1px solid #333', borderRadius: '4px', padding: '8px',
+                fontFamily: 'Consolas, monospace', fontSize: '13px', resize: 'none',
+                outline: 'none'
+              }}
+            />
           </div>
         )}
       </div>

@@ -128,7 +128,7 @@ const Sidebar = ({ onlineUsers = [], currentUser = {}, roomId, socket, isConnect
       {(activeTab === 'people' || collapsed) && (
         <div className="user-list">
           {onlineUsers.length > 0 ? onlineUsers.map((user, idx) => {
-            const isYou = user.username === currentUsername;
+            const isYou = socket && user.socketId === socket.id;
             const isFirst = idx === 0;
             return (
               <div
@@ -170,7 +170,7 @@ const Sidebar = ({ onlineUsers = [], currentUser = {}, roomId, socket, isConnect
               <div className="empty-state">Chưa có tin nhắn nào.<br />Hãy bắt đầu cuộc trò chuyện!</div>
             ) : (
               messages.map((msg, idx) => {
-                const isMe = msg.username === currentUsername;
+                const isMe = socket && msg.socketId ? msg.socketId === socket.id : msg.username === currentUsername;
                 const userIdx = onlineUsers.findIndex(u => u.username === msg.username);
                 const color = AVATAR_COLORS[(userIdx >= 0 ? userIdx : idx) % AVATAR_COLORS.length];
                 return (

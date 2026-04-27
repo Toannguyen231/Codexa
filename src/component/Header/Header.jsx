@@ -5,11 +5,14 @@ import { FiPlay, FiShare2, FiCopy, FiCheck, FiChevronDown, FiLogOut, FiUser, FiC
 import { LiaAccessibleIcon } from "react-icons/lia";
 import { LANGUAGE_VERSION, LANGUAGE_DISPLAY_NAME } from './constants';
 import LanguageSelector from './LanguageSelector';
+import EditorSettings from '../EditorSettings/EditorSettings';
+import { FiSettings, FiZap } from 'react-icons/fi';
 
-const Header = ({ onRun, isRunning, language, setLanguage, roomId, isConnected, onlineUsers = [], currentUser = {}, onOpenHistory }) => {
+const Header = ({ onRun, isRunning, language, setLanguage, roomId, isConnected, onlineUsers = [], currentUser = {}, onOpenHistory, editorSettings, setEditorSettings, aiOpen, setAIOpen }) => {
   const [copied, setCopied] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const profileRef = useRef(null);
   const navigate = useNavigate();
 
@@ -135,9 +138,23 @@ const Header = ({ onRun, isRunning, language, setLanguage, roomId, isConnected, 
 
         <div className="divider-v" />
 
+        <button className="btn-ai" onClick={() => setAIOpen(!aiOpen)} title="Gemini AI Assistant" style={{ color: '#a855f7' }}>
+          <FiZap size={13} />
+          AI Assistant
+        </button>
+
+        <div className="divider-v" />
+
         <button className="btn-history" onClick={onOpenHistory} title="Lịch sử code">
           <FiClock size={13} />
           History
+        </button>
+
+        <div className="divider-v" />
+
+        <button className="btn-settings" onClick={() => setSettingsOpen(true)} title="Editor Settings">
+          <FiSettings size={13} />
+          Settings
         </button>
 
         <div className="divider-v" />
@@ -172,6 +189,14 @@ const Header = ({ onRun, isRunning, language, setLanguage, roomId, isConnected, 
           )}
         </div>
       </div>
+      
+      {settingsOpen && (
+        <EditorSettings 
+          settings={editorSettings} 
+          setSettings={setEditorSettings} 
+          onClose={() => setSettingsOpen(false)} 
+        />
+      )}
     </header>
   );
 };

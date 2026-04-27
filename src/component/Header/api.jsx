@@ -25,7 +25,7 @@ const decodeBase64 = (str) => {
     }
 };
 
-export const executeCode = async (displayLanguage, sourceCode) => {
+export const executeCode = async (displayLanguage, sourceCode, stdin = "") => {
     const langKey = LANGUAGE_KEY_BY_DISPLAY[displayLanguage] || displayLanguage.toLowerCase();
     const language_id = LANGUAGE_ID[langKey];
 
@@ -38,7 +38,7 @@ export const executeCode = async (displayLanguage, sourceCode) => {
         body: JSON.stringify({
             language_id,
             source_code: encodeBase64(sourceCode),
-            stdin: ""
+            stdin: encodeBase64(stdin)
         })
     });
 
