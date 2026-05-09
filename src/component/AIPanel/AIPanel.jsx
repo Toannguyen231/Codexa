@@ -29,9 +29,9 @@ const AIPanel = ({ code, language, onClose }) => {
       if (!response.ok) {
         let errMsg = `Lỗi hệ thống: ${response.status}`;
         try {
-           const errData = await response.json();
-           errMsg = `Lỗi từ Server: ${errData.message || response.statusText}`;
-        } catch(e) {}
+          const errData = await response.json();
+          errMsg = `Lỗi từ Server: ${errData.message || response.statusText}`;
+        } catch (e) { }
         throw new Error(errMsg);
       }
 
@@ -39,16 +39,16 @@ const AIPanel = ({ code, language, onClose }) => {
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder('utf-8');
-      
+
       let aiText = '';
-      
+
       while (true) {
         const { value, done } = await reader.read();
         if (done) break;
-        
+
         const chunk = decoder.decode(value, { stream: true });
         const lines = chunk.split('\n');
-        
+
         for (const line of lines) {
           if (line.startsWith('data: ')) {
             const dataStr = line.slice(6).trim();
@@ -64,7 +64,7 @@ const AIPanel = ({ code, language, onClose }) => {
               try {
                 const data = JSON.parse(dataStr);
                 aiText += data.text;
-                
+
                 // Update last message
                 setMessages(prev => {
                   const newMsgs = [...prev];
@@ -151,12 +151,12 @@ const AIPanel = ({ code, language, onClose }) => {
       <div className="ai-panel">
         <div className="ai-panel-header">
           <div className="ai-title">
-            <FiCpu size={15} /> 
+            <FiCpu size={15} />
             AI Assistant (Gemini)
           </div>
           <button className="btn-close" onClick={onClose}><FiX size={15} /></button>
         </div>
-        
+
         <div className="ai-suggestions">
           <button onClick={handleExplain} disabled={loading}><FiMessageSquare /> Explain</button>
           <button onClick={handleFixBugs} disabled={loading}><FiTool /> Fix Bugs</button>
