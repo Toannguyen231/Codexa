@@ -12,7 +12,6 @@ const Login = () => {
     const [email, setEmail] = useState('');
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [roomId, setRoomId] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -46,32 +45,8 @@ const Login = () => {
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
 
-            // Nếu có roomId → join phòng đó, nếu không → tạo phòng mới
-            console.log('RoomId input:', roomId);
-            if (roomId.trim()) {
-                console.log('Navigating to existing room:', roomId.trim());
-                navigate(`/room/${roomId.trim()}`);
-            } else {
-                console.log('Creating new room...');
-                // Tạo phòng mới
-                const roomRes = await fetch(`${API_URL}/rooms`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${data.token}`,
-                    },
-                });
-                console.log('Room API response status:', roomRes.status);
-                const roomData = await roomRes.json();
-                console.log('Room API response data:', roomData);
-                if (roomData.room) {
-                    console.log('Navigating to new room:', roomData.room.roomId);
-                    navigate(`/room/${roomData.room.roomId}`);
-                } else {
-                    console.log('Room creation failed, using DEFAULT');
-                    navigate('/room/DEFAULT');
-                }
-            }
+            // Chuyển đến trang Room Menu
+            navigate('/rooms');
         } catch (err) {
             console.error('Login error:', err);
             setError('Không thể kết nối server: ' + err.message);
@@ -159,19 +134,6 @@ const Login = () => {
                                     required
                                 />
                                 <label className="form-label" htmlFor="password" style={{ color: 'var(--text-muted)' }}>Password</label>
-                            </div>
-
-                            {/* Room ID input (tùy chọn) */}
-                            <div className="form-outline mb-3">
-                                <input
-                                    type="text"
-                                    id="roomId"
-                                    className="form-control form-control-lg"
-                                    placeholder="Enter Room ID to join (optional)"
-                                    value={roomId}
-                                    onChange={(e) => setRoomId(e.target.value)}
-                                />
-                                <label className="form-label" htmlFor="roomId" style={{ color: 'var(--text-muted)' }}>Room ID (để trống = tạo phòng mới)</label>
                             </div>
 
                             <div className="text-center text-lg-start mt-4 pt-2">

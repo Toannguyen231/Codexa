@@ -221,6 +221,34 @@
   color: var(--text-dim);
 }
 
+/* ── Offline Members ── */
+.offline-divider {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 12px 14px 4px;
+  border-top: 1px solid var(--border-color);
+  margin-top: 4px;
+}
+
+.user-item.offline {
+  opacity: 0.6;
+}
+
+.user-item.offline:hover {
+  opacity: 0.8;
+}
+
+.status-dot.offline {
+  background: #484f58;
+}
+
+.user-status-text.offline-text {
+  color: var(--text-dim);
+}
+
 /* ── Chat tab ── */
 .chat-area {
   flex: 1;

@@ -20,7 +20,7 @@ const formatMsgTime = (ts) => {
   return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 };
 
-const Sidebar = ({ onlineUsers = [], currentUser = {}, roomId, socket, isConnected }) => {
+const Sidebar = ({ onlineUsers = [], currentUser = {}, roomId, socket, isConnected, roomOwner = '', roomParticipants = [] }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState('people'); // 'people' | 'chat'
   const [messages, setMessages] = useState([]);
@@ -127,9 +127,10 @@ const Sidebar = ({ onlineUsers = [], currentUser = {}, roomId, socket, isConnect
       {/* ── Tab: People ── */}
       {(activeTab === 'people' || collapsed) && (
         <div className="user-list">
+          {/* ── Online Users ── */}
           {onlineUsers.length > 0 ? onlineUsers.map((user, idx) => {
             const isYou = socket && user.socketId === socket.id;
-            const isFirst = idx === 0;
+            const isOwner = user.username === roomOwner;
             return (
               <div
                 key={user.socketId}
@@ -144,11 +145,11 @@ const Sidebar = ({ onlineUsers = [], currentUser = {}, roomId, socket, isConnect
                   <div className="user-name-row">
                     <span className="user-name">{user.username}</span>
                     {isYou && <span className="you-badge">You</span>}
-                    {isFirst && <FaCrown size={11} className="owner-icon" title="Room Owner" />}
+                    {isOwner && <FaCrown size={11} className="owner-icon" title="Room Owner" />}
                   </div>
                   <div className="user-meta">
                     <span className="user-status-text online-text">
-                      ● {isFirst ? 'Owner' : 'Online'}
+                      ● {isOwner ? 'Owner' : 'Online'}
                     </span>
                     <span className="join-time">{getJoinTimeAgo(user.joinedAt)}</span>
                   </div>
@@ -158,6 +159,42 @@ const Sidebar = ({ onlineUsers = [], currentUser = {}, roomId, socket, isConnect
           }) : (
             <div className="empty-state">Chưa có ai trong phòng</div>
           )}
+
+          {/* ── Offline Members ── */}
+          {!collapsed && (() => {
+            const onlineNames = onlineUsers.map(u => u.username);
+            const offlineMembers = roomParticipants.filter(
+              p => !onlineNames.includes(p.username)
+            );
+            if (offlineMembers.length === 0) return null;
+            return (
+              <>
+                <div className="offline-divider">Offline — {offlineMembers.length}</div>
+                {offlineMembers.map((member, idx) => {
+                  const isOwner = member.username === roomOwner;
+                  return (
+                    <div key={member.id || idx} className="user-item offline">
+                      <div className="user-avatar-sm" style={{ backgroundColor: '#484f58' }}>
+                        {getInitials(member.username)}
+                        <span className="status-dot offline" />
+                      </div>
+                      <div className="user-info">
+                        <div className="user-name-row">
+                          <span className="user-name">{member.username}</span>
+                          {isOwner && <FaCrown size={11} className="owner-icon" title="Room Owner" />}
+                        </div>
+                        <div className="user-meta">
+                          <span className="user-status-text offline-text">
+                            ○ {isOwner ? 'Owner · Offline' : 'Offline'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </>
+            );
+          })()}
         </div>
       )}
 

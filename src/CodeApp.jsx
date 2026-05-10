@@ -45,6 +45,8 @@ function CodeApp() {
     const [showHistory, setShowHistory] = useState(false);
     const [aiOpen, setAIOpen] = useState(false);
     const [stdin, setStdin] = useState('');
+    const [roomOwner, setRoomOwner] = useState('');
+    const [roomParticipants, setRoomParticipants] = useState([]);
     
     // Editor settings state
     const [editorSettings, setEditorSettings] = useState({
@@ -65,7 +67,7 @@ function CodeApp() {
         if (!socket) return;
 
         // Nhận code hiện tại khi vừa join room
-        socket.on('room-state', ({ code: roomCode, language: roomLang }) => {
+        socket.on('room-state', ({ code: roomCode, language: roomLang, owner, participants }) => {
             isRemoteChange.current = true;
             if (roomCode) setCode(roomCode);
             if (roomLang) setLanguage(roomLang);
@@ -73,6 +75,9 @@ function CodeApp() {
             if (!roomCode && roomLang) {
                 setCode(DEFAULT_CODE[roomLang] || '');
             }
+            // Lưu thông tin owner + participants từ DB
+            if (owner) setRoomOwner(owner);
+            if (participants) setRoomParticipants(participants);
         });
 
         // Nhận code từ user khác đang gõ
@@ -238,6 +243,8 @@ function CodeApp() {
                     roomId={roomId}
                     socket={socket}
                     isConnected={isConnected}
+                    roomOwner={roomOwner}
+                    roomParticipants={roomParticipants}
                 />
 
                 <div className="editor-area">
