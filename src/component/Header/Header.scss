@@ -19,6 +19,28 @@
   flex-shrink: 0;
 }
 
+.back-to-menu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+
+  &:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    border-color: var(--accent);
+    box-shadow: 0 0 8px rgba(44, 187, 93, 0.2);
+  }
+}
+
 .logo {
   display: flex;
   align-items: center;

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   FiPlus, FiSearch, FiLogOut, FiRefreshCw, FiUsers, FiClock,
-  FiCode, FiArrowRight, FiX, FiHash
+  FiCode, FiArrowRight, FiX, FiHash, FiLock, FiUnlock, FiEye, FiEyeOff
 } from 'react-icons/fi';
 import { LiaAccessibleIcon } from 'react-icons/lia';
 import './RoomMenu.scss';
@@ -28,8 +28,19 @@ const RoomMenu = () => {
   const [joinId, setJoinId] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const [newRoomName, setNewRoomName] = useState('');
+  const [newRoomPassword, setNewRoomPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [creating, setCreating] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Password prompt modal
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [pendingRoomId, setPendingRoomId] = useState('');
+  const [pendingRoomName, setPendingRoomName] = useState('');
+  const [roomPassword, setRoomPassword] = useState('');
+  const [showRoomPassword, setShowRoomPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [verifying, setVerifying] = useState(false);
 
   // Lấy thông tin user + token từ localStorage
   const token = localStorage.getItem('token') || '';
@@ -91,7 +102,10 @@ const RoomMenu = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ name: newRoomName.trim() || 'Untitled Room' }),
+        body: JSON.stringify({
+          name: newRoomName.trim() || 'Untitled Room',
+          password: newRoomPassword.trim() || '',
+        }),
       });
       const data = await res.json();
       if (data.room) {
@@ -104,11 +118,90 @@ const RoomMenu = () => {
     }
   };
 
+  // ── Join phòng (kiểm tra password nếu cần) ────────────────────
+  const handleJoinRoom = async (roomId, roomName, isPrivate) => {
+    if (!isPrivate) {
+      navigate(`/room/${roomId}`);
+      return;
+    }
+    // Nếu phòng private → kiểm tra user đã là participant chưa
+    try {
+      const res = await fetch(`${API_URL}/rooms/${roomId}/verify-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ password: '' }),
+      });
+      const data = await res.json();
+      if (data.verified) {
+        navigate(`/room/${roomId}`);
+        return;
+      }
+    } catch { /* ignore */ }
+    // Hiện modal nhập password
+    setPendingRoomId(roomId);
+    setPendingRoomName(roomName || roomId);
+    setRoomPassword('');
+    setPasswordError('');
+    setShowPasswordModal(true);
+  };
+
+  // ── Xác minh password & join ───────────────────────────────────
+  const handleVerifyAndJoin = async () => {
+    if (verifying) return;
+    setVerifying(true);
+    setPasswordError('');
+    try {
+      const res = await fetch(`${API_URL}/rooms/${pendingRoomId}/verify-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ password: roomPassword }),
+      });
+      const data = await res.json();
+      if (data.verified) {
+        setShowPasswordModal(false);
+        navigate(`/room/${pendingRoomId}`);
+      } else {
+        setPasswordError(data.message || 'Mật khẩu sai.');
+      }
+    } catch {
+      setPasswordError('Lỗi kết nối server.');
+    } finally {
+      setVerifying(false);
+    }
+  };
+
   // ── Join phòng bằng ID ────────────────────────────────────────
-  const handleJoinById = () => {
+  const handleJoinById = async () => {
     const id = joinId.trim();
     if (!id) return;
-    navigate(`/room/${id}`);
+    // Kiểm tra xem phòng có password không
+    try {
+      const res = await fetch(`${API_URL}/rooms/${id}/verify-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ password: '' }),
+      });
+      const data = await res.json();
+      if (data.verified) {
+        navigate(`/room/${id}`);
+        return;
+      }
+    } catch { /* phòng không tồn tại hoặc cần password */ }
+    // Hiện password modal
+    setPendingRoomId(id);
+    setPendingRoomName(id);
+    setRoomPassword('');
+    setPasswordError('');
+    setShowPasswordModal(true);
   };
 
   // ── Logout ─────────────────────────────────────────────────────
@@ -219,12 +312,15 @@ const RoomMenu = () => {
             {rooms.map((room) => (
               <div
                 key={room.roomId || room._id}
-                className="rm-card"
-                onClick={() => navigate(`/room/${room.roomId}`)}
+                className={`rm-card ${room.isPrivate ? 'rm-card-private' : ''}`}
+                onClick={() => handleJoinRoom(room.roomId, room.name, room.isPrivate)}
               >
                 <div className="rm-card-top">
                   <div className="rm-card-info">
-                    <div className="rm-card-name">{room.name || 'Untitled Room'}</div>
+                    <div className="rm-card-name">
+                      {room.isPrivate && <FiLock size={12} className="rm-lock-icon" />}
+                      {room.name || 'Untitled Room'}
+                    </div>
                     <div className="rm-card-id">
                       <FiHash size={10} />
                       {room.roomId}
@@ -242,6 +338,11 @@ const RoomMenu = () => {
                     <FiClock size={12} />
                     {timeAgo(room.updatedAt)}
                   </span>
+                  {room.isPrivate && (
+                    <span className="rm-card-meta-item rm-private-badge">
+                      <FiLock size={10} /> Private
+                    </span>
+                  )}
                 </div>
 
                 <div className="rm-card-bottom">
@@ -255,7 +356,7 @@ const RoomMenu = () => {
                     className="rm-btn-card-join"
                     onClick={(e) => {
                       e.stopPropagation();
-                      navigate(`/room/${room.roomId}`);
+                      handleJoinRoom(room.roomId, room.name, room.isPrivate);
                     }}
                   >
                     <FiCode size={12} /> Join
@@ -292,8 +393,36 @@ const RoomMenu = () => {
                 />
               </div>
 
+              <div className="rm-modal-field">
+                <label>
+                  <FiLock size={12} style={{ marginRight: 4 }} />
+                  Mật khẩu phòng <span className="rm-optional">(tùy chọn)</span>
+                </label>
+                <div className="rm-password-wrap">
+                  <input
+                    type={showNewPassword ? 'text' : 'password'}
+                    placeholder="Để trống nếu phòng public"
+                    value={newRoomPassword}
+                    onChange={(e) => setNewRoomPassword(e.target.value)}
+                    maxLength={30}
+                  />
+                  <button
+                    type="button"
+                    className="rm-password-toggle"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                  >
+                    {showNewPassword ? <FiEyeOff size={14} /> : <FiEye size={14} />}
+                  </button>
+                </div>
+                {newRoomPassword && (
+                  <span className="rm-password-hint">
+                    <FiLock size={10} /> Phòng sẽ yêu cầu mật khẩu để tham gia
+                  </span>
+                )}
+              </div>
+
               <div className="rm-modal-actions">
-                <button className="rm-modal-btn-cancel" onClick={() => setShowCreate(false)}>
+                <button className="rm-modal-btn-cancel" onClick={() => { setShowCreate(false); setNewRoomPassword(''); }}>
                   Hủy
                 </button>
                 <button
@@ -301,7 +430,58 @@ const RoomMenu = () => {
                   onClick={handleCreate}
                   disabled={creating}
                 >
-                  {creating ? 'Đang tạo...' : 'Tạo phòng'}
+                  {creating ? 'Đang tạo...' : (newRoomPassword ? '🔒 Tạo phòng Private' : 'Tạo phòng')}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ── Password Prompt Modal ── */}
+      {showPasswordModal && (
+        <div className="rm-modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowPasswordModal(false)}>
+          <div className="rm-modal rm-modal-password">
+            <div className="rm-modal-header">
+              <h3><FiLock size={16} /> Phòng yêu cầu mật khẩu</h3>
+              <button className="rm-modal-close" onClick={() => setShowPasswordModal(false)}>
+                <FiX size={16} />
+              </button>
+            </div>
+            <div className="rm-modal-body">
+              <p className="rm-password-room-name">
+                Nhập mật khẩu để tham gia phòng <strong>{pendingRoomName}</strong>
+              </p>
+              <div className="rm-modal-field">
+                <label>Mật khẩu</label>
+                <div className="rm-password-wrap">
+                  <input
+                    type={showRoomPassword ? 'text' : 'password'}
+                    placeholder="Nhập mật khẩu phòng..."
+                    value={roomPassword}
+                    onChange={(e) => { setRoomPassword(e.target.value); setPasswordError(''); }}
+                    onKeyDown={(e) => e.key === 'Enter' && handleVerifyAndJoin()}
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    className="rm-password-toggle"
+                    onClick={() => setShowRoomPassword(!showRoomPassword)}
+                  >
+                    {showRoomPassword ? <FiEyeOff size={14} /> : <FiEye size={14} />}
+                  </button>
+                </div>
+                {passwordError && <span className="rm-password-error">{passwordError}</span>}
+              </div>
+              <div className="rm-modal-actions">
+                <button className="rm-modal-btn-cancel" onClick={() => setShowPasswordModal(false)}>
+                  Hủy
+                </button>
+                <button
+                  className="rm-modal-btn-create"
+                  onClick={handleVerifyAndJoin}
+                  disabled={verifying || !roomPassword}
+                >
+                  {verifying ? 'Đang kiểm tra...' : '🔓 Tham gia'}
                 </button>
               </div>
             </div>

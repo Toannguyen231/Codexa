@@ -650,3 +650,93 @@
     animation: rm-spin 0.6s linear;
   }
 }
+
+/* ── Password & Private Room Styles ────────────────────────── */
+.rm-card-private {
+  &::before {
+    background: linear-gradient(90deg, #ff9800, #f44336, #ff9800) !important;
+  }
+}
+
+.rm-lock-icon {
+  color: #ff9800;
+  margin-right: 5px;
+  flex-shrink: 0;
+}
+
+.rm-private-badge {
+  color: #ff9800 !important;
+  background: rgba(255, 152, 0, 0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px !important;
+  font-weight: 600;
+  gap: 3px !important;
+}
+
+.rm-password-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  input {
+    width: 100%;
+    padding-right: 40px;
+  }
+}
+
+.rm-password-toggle {
+  position: absolute;
+  right: 8px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s;
+
+  &:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+  }
+}
+
+.rm-optional {
+  color: var(--text-dim);
+  font-weight: 400;
+  font-size: 11px;
+}
+
+.rm-password-hint {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #ff9800;
+  padding: 4px 0;
+}
+
+.rm-password-error {
+  font-size: 12px;
+  color: #f44336;
+  padding: 2px 0;
+}
+
+.rm-password-room-name {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+
+  strong {
+    color: var(--text-primary);
+  }
+}
+
+.rm-modal-password {
+  .rm-modal-header h3 {
+    color: #ff9800;
+  }
+}

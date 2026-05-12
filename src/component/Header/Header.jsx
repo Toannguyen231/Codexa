@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Header.scss';
-import { FiPlay, FiShare2, FiCopy, FiCheck, FiChevronDown, FiLogOut, FiUser, FiClock } from 'react-icons/fi';
+import { FiPlay, FiShare2, FiCopy, FiCheck, FiChevronDown, FiLogOut, FiUser, FiClock, FiArrowLeft, FiHome } from 'react-icons/fi';
 import { LiaAccessibleIcon } from "react-icons/lia";
 import { LANGUAGE_VERSION, LANGUAGE_DISPLAY_NAME } from './constants';
 import LanguageSelector from './LanguageSelector';
@@ -64,6 +64,10 @@ const Header = ({ onRun, isRunning, language, setLanguage, roomId, isConnected, 
     <header className="header">
       {/* LEFT */}
       <div className="header-left">
+        <button className="back-to-menu" onClick={() => navigate('/rooms')} title="Quay về danh sách phòng">
+          <FiArrowLeft size={16} />
+        </button>
+
         <div className="logo">
           <div className="logo-icon"><LiaAccessibleIcon size={24} color="#d7d4ceff" /></div>
           CodeRoom

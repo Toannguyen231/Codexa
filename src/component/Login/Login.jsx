@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiFacebook, FiTwitter, FiLinkedin, FiGithub } from 'react-icons/fi';
+import { FiFacebook, FiTwitter, FiLinkedin } from 'react-icons/fi';
 import trollImage from './img/Anhrtroll.png';
 import './Login.css';
 
