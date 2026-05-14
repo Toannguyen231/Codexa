@@ -1,5 +1,0 @@
-{
-    "buildCommand": "cd ../app_code_realTime && npm install && npm run build",
-    "outputDirectory": "app_code_realTime/dist",
-    "framework": "vite"
-}
