@@ -1,327 +1,361 @@
-# 🚀 CodeRoom — Real-time Collaborative Code Editor
-
 <div align="center">
 
-![CodeRoom](https://img.shields.io/badge/CodeRoom-v1.0-2cbb5d?style=for-the-badge&logo=visual-studio-code&logoColor=white)
-![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react)
-![Node.js](https://img.shields.io/badge/Node.js-Express%205-339933?style=flat-square&logo=node.js)
-![Socket.IO](https://img.shields.io/badge/Socket.IO-4.8-010101?style=flat-square&logo=socket.io)
-![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-47A248?style=flat-square&logo=mongodb)
-![Gemini AI](https://img.shields.io/badge/Gemini-2.5%20Flash-4285F4?style=flat-square&logo=google)
+# CodeRoom
 
-**Ứng dụng lập trình cộng tác thời gian thực — cho phép nhiều người cùng code, chat, chạy code và sử dụng AI hỗ trợ.**
+### Real-time Collaborative Code Editor
+
+[![Version](https://img.shields.io/badge/version-1.0.0-2cbb5d?style=for-the-badge)](.)
+[![License](https://img.shields.io/badge/license-MIT-blue?style=for-the-badge)](.)
+[![Status](https://img.shields.io/badge/status-Active%20Development-brightgreen?style=for-the-badge)](.)
+
+**A web-based collaborative coding environment that enables real-time multi-user code editing, execution, and AI-powered assistance — all within the browser.**
+
+[Features](#-key-features) · [Architecture](#-system-architecture) · [Tech Stack](#-technology-stack) · [API Reference](#-api-reference) · [Contributing](#-contributing)
 
 </div>
 
 ---
 
-## 📋 Mục lục
+## 📖 Overview
 
-- [Tính năng](#-tính-năng)
-- [Kiến trúc](#-kiến-trúc)
-- [Tech Stack](#-tech-stack)
-- [Cài đặt](#-cài-đặt)
-- [Cấu trúc thư mục](#-cấu-trúc-thư-mục)
-- [API Endpoints](#-api-endpoints)
-- [Socket.IO Events](#-socketio-events)
-- [Ngôn ngữ hỗ trợ](#-ngôn-ngữ-hỗ-trợ)
-- [Biến môi trường](#-biến-môi-trường)
+**CodeRoom** is a full-stack collaborative code editor designed to solve the problem of remote pair programming and real-time code collaboration. Unlike traditional code-sharing tools that rely on screen sharing or turn-based editing, CodeRoom provides a seamless, simultaneous editing experience where multiple developers can write, debug, and execute code together in real time.
+
+The platform is built around three core principles:
+
+- **Zero-latency collaboration** — Code changes propagate to all participants within milliseconds via persistent WebSocket connections, with debounced persistence to MongoDB ensuring no work is ever lost.
+- **Integrated development workflow** — Beyond editing, CodeRoom provides a complete workflow: compile & run code in 7 languages, inspect output together, chat in context, and leverage AI assistance — all without leaving the editor.
+- **Privacy-first room management** — Rooms support optional bcrypt-hashed password protection, giving teams control over who can access their collaborative sessions.
 
 ---
 
-## ✨ Tính năng
+## 🧩 Key Features
 
-### 🔥 Core
-- **Real-time Code Sync** — Nhiều người cùng viết code trong một phòng, thay đổi được đồng bộ tức thì qua WebSocket
-- **Remote Cursor** — Hiển thị vị trí con trỏ của các thành viên khác trên editor
-- **Monaco Editor** — Engine editor giống VS Code với syntax highlighting, IntelliSense, minimap
-- **7 ngôn ngữ** — C++, Python, Java, JavaScript, TypeScript, C#, PHP
+### Real-time Code Synchronization
 
-### 👥 Collaboration
-- **Room System** — Tạo/tham gia phòng bằng Room ID (8 ký tự)
-- **🔒 Password Protected Rooms** — Đặt mật khẩu cho phòng riêng tư (bcrypt hash)
-- **Online/Offline Members** — Hiển thị danh sách thành viên online và offline
-- **Real-time Chat** — Trò chuyện trực tiếp trong phòng
+CodeRoom employs a WebSocket-driven synchronization model using Socket.IO. Every keystroke is captured, debounced at 300ms on the client side, then broadcast to all connected peers and persisted to MongoDB. Remote cursors are rendered with per-user color coding and auto-hide after 5 seconds of inactivity, providing spatial awareness without visual clutter.
 
-### ⚡ Code Execution
-- **Run Code** — Biên dịch & chạy code trực tiếp trên trình duyệt
-- **Stdin Support** — Nhập input (stdin) cho chương trình
-- **Output Sync** — Kết quả chạy code được đồng bộ cho tất cả thành viên
-- **Wandbox API** — Sử dụng Wandbox (miễn phí, không cần API key) để execute code
+### Multi-Language Code Execution
 
-### 🤖 AI Assistant
-- **Gemini 2.5 Flash** — Tích hợp Google Gemini AI
-- **4 chức năng**: Explain Code, Fix Bugs, Optimize, Free Chat
-- **Streaming Response** — Real-time typing effect qua Server-Sent Events (SSE)
-- **Draggable Panel** — Panel AI có thể kéo thả, resize tùy ý
+Code execution is powered by the **Wandbox** compilation service, supporting 7 languages with production-grade compilers:
 
-### 📜 History & Settings
-- **Code Snapshots** — Lưu/khôi phục tối đa 20 snapshot code
-- **Editor Settings** — Tùy chỉnh theme (VS Dark/Light/HC), font size, minimap, word wrap
-- **Share Room** — Copy link phòng để mời người khác
+| Language | Compiler / Runtime | Version |
+|---|---|---|
+| C++ | GCC | 13.2.0 |
+| Python | CPython | 3.12.7 |
+| Java | OpenJDK | 22 |
+| JavaScript | Node.js | 20.17.0 |
+| TypeScript | TypeScript Compiler | 5.6.2 |
+| C# | .NET Core | 8.0.402 |
+| PHP | PHP | 8.3.12 |
+
+Execution results (stdout, stderr, exit codes) are synchronized across all room participants in real time, enabling collaborative debugging sessions.
+
+### AI-Powered Code Assistant
+
+An integrated AI assistant powered by **Google Gemini 2.5 Flash** provides four specialized operations:
+
+| Operation | Description |
+|---|---|
+| **Explain** | Analyzes and explains code logic, highlighting potential issues |
+| **Fix Bugs** | Identifies bugs, explains root causes, and provides corrected code |
+| **Optimize** | Suggests performance improvements and cleaner code patterns |
+| **Free Chat** | Context-aware conversation with full access to the current codebase |
+
+All AI responses are delivered via **Server-Sent Events (SSE)**, producing a real-time streaming effect. The AI panel is implemented as a draggable, resizable overlay (`react-rnd`) that doesn't interfere with the editing workspace.
+
+### Room System & Access Control
+
+- **Room creation** with auto-generated 8-character UUIDs
+- **Optional password protection** — passwords are hashed with bcrypt (salt rounds = 10) and verified server-side before granting access
+- **Participant tracking** — the system distinguishes between online (active WebSocket connection) and offline (previously joined but disconnected) members
+- **Room ownership** — the original creator is persisted and displayed, independent of join order
+- **Code history** — up to 20 snapshots per room with per-snapshot metadata (author, timestamp, language)
+
+### Editor Experience
+
+Built on **Monaco Editor** (the same engine powering VS Code), the editor provides:
+
+- Full syntax highlighting and IntelliSense for all 7 supported languages
+- Configurable themes (VS Dark, VS Light, High Contrast)
+- Adjustable font size, minimap toggle, and word wrap settings
+- Stdin input support for interactive programs
+- One-click room link sharing
 
 ---
 
-## 🏗 Kiến trúc
+## 🏗 System Architecture
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    Frontend (React 19)                   │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌────────────┐ │
-│  │  Login   │ │ RoomMenu │ │ CodeApp  │ │  AIPanel   │ │
-│  └──────────┘ └──────────┘ └──────────┘ └────────────┘ │
-│                       │ Socket.IO │ REST API            │
-└───────────────────────┼───────────┼─────────────────────┘
-                        │           │
-┌───────────────────────┼───────────┼─────────────────────┐
-│              Backend (Express 5 + Socket.IO)            │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌────────────┐ │
-│  │ Auth API │ │ Room API │ │ Code API │ │   AI API   │ │
-│  └──────────┘ └──────────┘ └──────────┘ └────────────┘ │
-│       │              │           │              │       │
-│  ┌────┴──────────────┴───┐  ┌───┴───┐    ┌─────┴────┐  │
-│  │       MongoDB         │  │Wandbox│    │ Gemini   │  │
-│  └───────────────────────┘  └───────┘    └──────────┘  │
-└─────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│                   CLIENT  (React 19 + Vite 8)                │
+│                                                              │
+│  ┌──────────┐  ┌──────────┐  ┌───────────┐  ┌────────────┐  │
+│  │  Login   │  │ RoomMenu │  │  CodeApp  │  │  AIPanel   │  │
+│  │  (Auth)  │  │  (Lobby) │  │ (Editor)  │  │ (Gemini)   │  │
+│  └────┬─────┘  └────┬─────┘  └─────┬─────┘  └─────┬──────┘  │
+│       │              │              │              │          │
+│       └──────────────┴──────┬───────┴──────────────┘          │
+│                             │                                │
+│                    useSocket (Custom Hook)                    │
+│              ┌──────────────┴──────────────┐                 │
+│              │ REST API        Socket.IO   │                 │
+└──────────────┼─────────────────────────────┼─────────────────┘
+               │              │              │
+               ▼              ▼              ▼
+┌──────────────────────────────────────────────────────────────┐
+│                SERVER  (Express 5 + Socket.IO 4.8)           │
+│                                                              │
+│  ┌──────────┐  ┌──────────┐  ┌───────────┐  ┌────────────┐  │
+│  │ Auth API │  │ Room API │  │ Code API  │  │   AI API   │  │
+│  │ (JWT)    │  │ (CRUD)   │  │ (Wandbox) │  │   (SSE)    │  │
+│  └────┬─────┘  └────┬─────┘  └─────┬─────┘  └─────┬──────┘  │
+│       │              │              │              │          │
+│       ▼              ▼              │              ▼          │
+│  ┌─────────────────────────┐   ┌────┴────┐   ┌──────────┐   │
+│  │    MongoDB (Mongoose)   │   │ Wandbox │   │  Gemini  │   │
+│  │  Users · Rooms · History│   │   API   │   │   API    │   │
+│  └─────────────────────────┘   └─────────┘   └──────────┘   │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### Communication Patterns
+
+| Pattern | Protocol | Use Case |
+|---|---|---|
+| **REST API** | HTTP/JSON | Authentication, room CRUD, code execution |
+| **WebSocket** | Socket.IO | Code sync, cursor tracking, chat, output sync |
+| **SSE** | `text/event-stream` | AI response streaming (Gemini) |
+
+### Data Flow: Code Synchronization
+
+```
+User A types code
+       │
+       ▼
+ Frontend debounce (300ms)
+       │
+       ▼
+ socket.emit('code-change')  ──►  Server receives
+       │                                │
+       │                     ┌──────────┴──────────┐
+       │                     ▼                     ▼
+       │              socket.to(room)        Room.findOneAndUpdate()
+       │              .emit('code-sync')     (persist to MongoDB)
+       │                     │
+       │                     ▼
+       │              User B, C, ... receive
+       │              and update Monaco Editor
+       ▼
+ Local editor updates immediately (optimistic)
 ```
 
 ---
 
-## 🛠 Tech Stack
+## 🛠 Technology Stack
 
 ### Frontend
-| Công nghệ | Phiên bản | Vai trò |
+
+| Technology | Version | Purpose |
 |---|---|---|
-| React | 19.2.4 | UI Framework |
-| Vite | 8.0.1 | Build tool & dev server |
-| Monaco Editor | 0.55.1 | Code editor (VS Code engine) |
-| Socket.IO Client | 4.8.3 | Real-time communication |
-| React Router DOM | 7.14.0 | Client-side routing |
-| Bootstrap | 5.3.8 | CSS framework (Login page) |
-| React Icons | 5.6.0 | Icon library |
-| react-rnd | 10.5.3 | Draggable/resizable (AI Panel) |
-| SASS | 1.98.0 | CSS preprocessor |
+| **React** | 19.2.4 | Component-based UI with React Compiler optimization |
+| **Vite** | 8.0.1 | ESM-native build tool & HMR dev server |
+| **Monaco Editor** | 0.55.1 | VS Code's editor engine (syntax, IntelliSense, minimap) |
+| **Socket.IO Client** | 4.8.3 | Persistent WebSocket with automatic reconnection |
+| **React Router** | 7.14.0 | Client-side routing & navigation guards |
+| **react-rnd** | 10.5.3 | Draggable & resizable AI panel |
+| **SASS** | 1.98.0 | Modular SCSS stylesheets per component |
+| **Bootstrap** | 5.3.8 | Auth pages layout & utilities |
 
 ### Backend
-| Công nghệ | Phiên bản | Vai trò |
+
+| Technology | Version | Purpose |
 |---|---|---|
-| Express | 5.1.0 | HTTP server |
-| Socket.IO | 4.8.1 | WebSocket server |
-| Mongoose | 8.13.2 | MongoDB ODM |
-| JWT | 9.0.2 | Authentication |
-| bcryptjs | 3.0.2 | Password hashing |
-| @google/generative-ai | 0.24.1 | Gemini AI integration |
-| uuid | 11.1.0 | Room ID generation |
+| **Express** | 5.1.0 | HTTP server with async error handling |
+| **Socket.IO** | 4.8.1 | WebSocket server with room management |
+| **Mongoose** | 8.13.2 | MongoDB ODM with schema validation |
+| **JWT** | 9.0.2 | Stateless authentication tokens |
+| **bcryptjs** | 3.0.2 | Password hashing (user accounts + room passwords) |
+| **@google/generative-ai** | 0.24.1 | Gemini 2.5 Flash integration with streaming |
+| **uuid** | 11.1.0 | Cryptographic room ID generation |
 
 ### External Services
-| Service | Vai trò |
+
+| Service | Role |
 |---|---|
-| **Wandbox** (`wandbox.org`) | Compile & execute code (7 ngôn ngữ) |
-| **Google Gemini 2.5 Flash** | AI code assistant (SSE streaming) |
-| **MongoDB** | Database lưu users, rooms, code snapshots |
+| **Wandbox** (`wandbox.org`) | Serverless code compilation & execution (7 languages) |
+| **Google Gemini 2.5 Flash** | Generative AI for code analysis, debugging & optimization |
+| **MongoDB** | Document database for users, rooms, code, and snapshot history |
 
 ---
 
-## 🚀 Cài đặt
-
-### Yêu cầu
-- **Node.js** >= 18
-- **MongoDB** (local hoặc MongoDB Atlas)
-- **npm** hoặc **yarn**
-
-### 1. Clone dự án
-```bash
-git clone <repo-url>
-cd Project_code_realTime
-```
-
-### 2. Cài đặt Backend
-```bash
-cd severApp
-npm install
-```
-
-Tạo file `.env`:
-```env
-MONGO_URI=mongodb://localhost:27017/coderoom
-JWT_SECRET=your_jwt_secret_key_here
-GEMINI_API_KEY=your_gemini_api_key_here
-PORT=3001
-```
-
-Chạy server:
-```bash
-npm run dev
-```
-
-### 3. Cài đặt Frontend
-```bash
-cd app_code_realTime
-npm install
-npm run dev
-```
-
-### 4. Truy cập
-- **Frontend**: http://localhost:5173
-- **Backend**: http://localhost:3001
-
----
-
-## 📁 Cấu trúc thư mục
+## 📁 Project Structure
 
 ```
 Project_code_realTime/
-├── app_code_realTime/              # Frontend (React + Vite)
-│   ├── src/
-│   │   ├── App.jsx                 # Routing chính
-│   │   ├── CodeApp.jsx             # Trang editor chính
-│   │   ├── hooks/
-│   │   │   └── useSocket.js        # Custom hook Socket.IO
-│   │   └── component/
-│   │       ├── Login/              # Đăng nhập / đăng ký
-│   │       ├── RoomMenu/           # Danh sách phòng + tạo/join
-│   │       ├── Header/             # Header + language selector
-│   │       ├── Sidebar/            # People (online/offline) + Chat
-│   │       ├── Editor/             # Monaco Editor wrapper
-│   │       ├── OutputPanel/        # Console output + stdin
-│   │       ├── History/            # Code snapshots
-│   │       ├── AIPanel/            # Gemini AI assistant
-│   │       └── EditorSettings/     # Theme, font size, etc.
-│   ├── package.json
-│   └── vite.config.js
 │
-└── severApp/                       # Backend (Express + Socket.IO)
-    ├── index.js                    # Server chính + Socket events
+├── app_code_realTime/                  # ── Frontend Application ──
+│   ├── src/
+│   │   ├── App.jsx                     # Root router (Login → RoomMenu → CodeApp)
+│   │   ├── CodeApp.jsx                 # Main editor workspace orchestrator
+│   │   ├── hooks/
+│   │   │   └── useSocket.js            # Centralized Socket.IO hook
+│   │   └── component/
+│   │       ├── Login/                  # JWT authentication (register/login)
+│   │       ├── RoomMenu/              # Room lobby: create, join, search, browse
+│   │       ├── Header/                # Toolbar: language selector, run, AI, share
+│   │       ├── Editor/                # Monaco Editor wrapper with remote cursors
+│   │       ├── Sidebar/              # Online/offline members + real-time chat
+│   │       ├── OutputPanel/          # Execution output console + stdin input
+│   │       ├── AIPanel/              # Gemini AI assistant (draggable overlay)
+│   │       ├── History/              # Code snapshot timeline (save/restore)
+│   │       └── EditorSettings/       # Theme, font, minimap, word wrap config
+│   ├── vite.config.js
+│   └── package.json
+│
+└── severApp/                           # ── Backend Server ──
+    ├── index.js                        # Express + Socket.IO bootstrap, event handlers
     ├── middleware/
-    │   └── auth.js                 # JWT authentication
+    │   └── auth.js                     # JWT verification (HTTP + Socket handshake)
     ├── routes/
-    │   ├── auth.js                 # Register, Login, Logout
-    │   ├── rooms.js                # CRUD rooms + verify-password
-    │   ├── code.js                 # Code execution (Wandbox proxy)
-    │   └── ai.js                   # AI endpoints (SSE streaming)
+    │   ├── auth.js                     # POST /register, /login, /logout | GET /me
+    │   ├── rooms.js                    # Room CRUD + password verification
+    │   ├── code.js                     # POST /execute → Wandbox proxy
+    │   └── ai.js                       # AI endpoints with SSE streaming
     ├── models/
-    │   ├── User.js                 # username, email, password
-    │   └── Room.js                 # roomId, code, language, participants, password
-    ├── .env
+    │   ├── User.js                     # { username, email, password (bcrypt) }
+    │   └── Room.js                     # { roomId, code, language, participants, history[] }
     └── package.json
 ```
 
 ---
 
-## 🔌 API Endpoints
+## 🔌 API Reference
 
-### Auth (`/api/auth`)
-| Method | Endpoint | Mô tả |
-|---|---|---|
-| POST | `/register` | Đăng ký tài khoản |
-| POST | `/login` | Đăng nhập → JWT token |
-| POST | `/logout` | Đăng xuất |
-| GET | `/me` | Thông tin user hiện tại |
+### Authentication — `/api/auth`
 
-### Rooms (`/api/rooms`)
-| Method | Endpoint | Mô tả |
+| Method | Endpoint | Description |
 |---|---|---|
-| POST | `/` | Tạo phòng mới (+ password tùy chọn) |
-| GET | `/` | Phòng user đã tham gia |
-| GET | `/all?search=` | Tất cả phòng (search, filter) |
-| GET | `/:roomId` | Chi tiết phòng |
-| GET | `/:roomId/history` | Lịch sử code snapshots |
-| POST | `/:roomId/verify-password` | Kiểm tra password phòng |
+| `POST` | `/register` | Create new account → returns JWT |
+| `POST` | `/login` | Authenticate credentials → returns JWT |
+| `POST` | `/logout` | Invalidate session |
+| `GET` | `/me` | Get authenticated user profile |
 
-### Code Execution (`/api/code`)
-| Method | Endpoint | Mô tả |
-|---|---|---|
-| POST | `/execute` | Chạy code qua Wandbox API |
+### Rooms — `/api/rooms`
 
-### AI (`/api/ai`)
-| Method | Endpoint | Mô tả |
+| Method | Endpoint | Description |
 |---|---|---|
-| POST | `/explain` | Giải thích code (SSE streaming) |
-| POST | `/fix` | Tìm và sửa lỗi (SSE streaming) |
-| POST | `/optimize` | Tối ưu hóa code (SSE streaming) |
-| POST | `/chat` | Chat tự do với AI (SSE streaming) |
+| `POST` | `/` | Create room (optional: `password` field for private rooms) |
+| `GET` | `/` | List rooms the authenticated user has joined |
+| `GET` | `/all?search=` | Search & browse all rooms |
+| `GET` | `/:roomId` | Get room details (code, language, participants) |
+| `GET` | `/:roomId/history` | Retrieve code snapshots (max 20) |
+| `POST` | `/:roomId/verify-password` | Verify room password before joining |
+
+### Code Execution — `/api/code`
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/execute` | Compile & run code via Wandbox (body: `{ code, language, stdin }`) |
+
+### AI Assistant — `/api/ai`
+
+All AI endpoints accept `{ code, language }` and return `text/event-stream` (SSE).
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/explain` | Explain code logic and identify potential issues |
+| `POST` | `/fix` | Detect bugs, explain causes, provide corrected code |
+| `POST` | `/optimize` | Suggest performance and readability improvements |
+| `POST` | `/chat` | Free-form conversation with code context (body includes `message`) |
 
 ---
 
-## 🔄 Socket.IO Events
+## 🔄 Socket.IO Event Protocol
 
 ### Client → Server
-| Event | Payload | Mô tả |
+
+| Event | Payload | Description |
 |---|---|---|
-| `join-room` | `roomId` | Tham gia phòng |
-| `code-change` | `{ roomId, code }` | Gửi code mới (debounce 300ms) |
-| `language-change` | `{ roomId, language }` | Đổi ngôn ngữ |
-| `output-sync` | `{ roomId, output, isRunning }` | Sync output |
-| `send-message` | `{ roomId, text }` | Gửi tin nhắn chat |
-| `save-snapshot` | `{ roomId, code, language }` | Lưu snapshot |
-| `cursor-move` | `{ roomId, cursorData }` | Gửi vị trí con trỏ |
+| `join-room` | `roomId: string` | Join a room (auto-creates if not exists) |
+| `code-change` | `{ roomId, code }` | Broadcast code update (debounced 300ms client-side) |
+| `language-change` | `{ roomId, language }` | Switch programming language for the room |
+| `output-sync` | `{ roomId, output, isRunning }` | Share execution output with all members |
+| `send-message` | `{ roomId, text }` | Send chat message (max 500 chars) |
+| `save-snapshot` | `{ roomId, code, language }` | Save a code snapshot to history |
+| `cursor-move` | `{ roomId, cursorData }` | Broadcast cursor position for remote cursor rendering |
 
 ### Server → Client
-| Event | Payload | Mô tả |
+
+| Event | Payload | Description |
 |---|---|---|
-| `room-state` | `{ code, language, owner, participants }` | State phòng khi join |
-| `code-sync` | `{ code }` | Code mới từ user khác |
-| `language-sync` | `{ language }` | Ngôn ngữ mới |
-| `output-update` | `{ output, isRunning }` | Output từ user khác |
-| `users-update` | `[{ username, socketId }]` | Danh sách user online |
-| `user-joined` / `user-left` | `{ username }` | Thông báo join/leave |
-| `receive-message` | `{ username, text, timestamp }` | Tin nhắn chat |
-| `snapshot-saved` | `{ code, language, savedBy }` | Snapshot mới |
-| `cursor-update` | `{ socketId, username, position }` | Con trỏ user khác |
+| `room-state` | `{ code, language, owner, ownerId, participants }` | Full room state on join |
+| `code-sync` | `{ code }` | Code update from another participant |
+| `language-sync` | `{ language }` | Language change from another participant |
+| `output-update` | `{ output, isRunning }` | Execution output from another participant |
+| `users-update` | `[{ username, socketId, joinedAt }]` | Online users list (on any join/leave) |
+| `user-joined` | `{ username, onlineCount }` | Notification: new user joined |
+| `user-left` | `{ username, onlineCount }` | Notification: user disconnected |
+| `receive-message` | `{ username, text, timestamp }` | Chat message broadcast |
+| `snapshot-saved` | `{ code, language, savedBy, savedAt }` | Snapshot confirmation |
+| `cursor-update` | `{ socketId, username, ...cursorData }` | Remote cursor position |
 
 ---
 
-## 🌐 Ngôn ngữ hỗ trợ
+## 🔐 Security Model
 
-| Ngôn ngữ | Compiler (Wandbox) | Monaco Language |
+| Layer | Mechanism | Details |
 |---|---|---|
-| C++ | gcc 13.2.0 | `cpp` |
-| Python | CPython 3.12.7 | `python` |
-| Java | OpenJDK 22 | `java` |
-| JavaScript | Node.js 20.17.0 | `javascript` |
-| TypeScript | TypeScript 5.6.2 | `typescript` |
-| C# | .NET Core 8.0.402 | `csharp` |
-| PHP | PHP 8.3.12 | `php` |
+| **Authentication** | JWT (HS256) | Stateless tokens via `Authorization: Bearer <token>` header |
+| **Socket Auth** | Handshake token | JWT verified in `io.use()` middleware before connection |
+| **User Passwords** | bcrypt | Salted hash (configurable rounds) for user account passwords |
+| **Room Passwords** | bcrypt | Optional per-room password, hashed with 10 salt rounds |
+| **Input Validation** | Server-side | Room IDs sanitized, chat messages capped at 500 chars, code body limited to 1MB |
+| **CORS** | Origin whitelist | Restricted to `localhost:*` in development |
 
 ---
 
-## 🔐 Biến môi trường
+## ⚙️ Environment Configuration
 
-Tạo file `severApp/.env`:
+The backend requires a `.env` file in the `severApp/` directory:
 
 ```env
-# MongoDB connection string
+# MongoDB connection URI
 MONGO_URI=mongodb://localhost:27017/coderoom
 
-# JWT secret key (bất kỳ chuỗi nào)
-JWT_SECRET=my_super_secret_jwt_key_2024
+# JWT signing secret (use a strong, random string in production)
+JWT_SECRET=<your-secret-key>
 
-# Google Gemini API Key (lấy tại https://aistudio.google.com/apikey)
-GEMINI_API_KEY=AIzaSy...
+# Google Gemini API Key — obtain at https://aistudio.google.com/apikey
+GEMINI_API_KEY=<your-gemini-api-key>
 
-# Port server (mặc định 3001)
+# Server port (default: 3001)
 PORT=3001
 ```
 
-> ⚠️ **Lưu ý**: File `.env` không được commit lên Git. Đảm bảo đã thêm vào `.gitignore`.
+> **Note**: The `.env` file must never be committed to version control. Ensure it is listed in `.gitignore`.
 
 ---
 
-## 📝 Ghi chú phát triển
+## 📝 Technical Notes
 
-- **Frontend** chạy trên cổng `5173` (Vite), **Backend** trên cổng `3001`
-- **CORS** đã được cấu hình cho localhost dev environment
-- **Socket.IO** sử dụng JWT token từ `socket.handshake.auth.token` để xác thực
-- **Code sync** sử dụng debounce 300ms để tránh quá tải server
-- **Remote cursor** tự động ẩn sau 5 giây không hoạt động
-- **Snapshots** giới hạn tối đa 20 bản/phòng
-- **Room password** được hash bằng bcrypt (salt rounds = 10)
-- **AI streaming** sử dụng Server-Sent Events (SSE) qua `text/event-stream`
+- **Graceful shutdown** — The server handles `SIGINT` / `SIGTERM` signals, closing Socket.IO connections, HTTP server, and MongoDB connections in order before exiting.
+- **Ghost user prevention** — On disconnect, users are removed from all rooms they've joined (not just the current one), preventing stale entries in the online users list.
+- **Lazy AI initialization** — The Gemini client is initialized on first API call rather than at module load time, avoiding crashes when the API key is not configured.
+- **Optimistic UI** — Code changes are applied locally immediately, then broadcast asynchronously, ensuring the typing experience feels native regardless of network latency.
+- **Snapshot cap** — MongoDB's `$slice: -20` operator is used to enforce the 20-snapshot limit per room at the database level, preventing unbounded growth.
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome. Please open an issue first to discuss proposed changes before submitting a pull request.
 
 ---
 
 <div align="center">
 
-**Made with ❤️ by CodeRoom Team**
+**Built with ❤️ by CodeRoom Team**
+
+*Real-time collaboration, reimagined for developers.*
 
 </div>
