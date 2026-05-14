@@ -1,13 +1,5 @@
 {
     "buildCommand": "cd ../app_code_realTime && npm install && npm run build",
     "outputDirectory": "app_code_realTime/dist",
-    "framework": "vite",
-    "env": {
-        "VITE_API_URL": {
-            "description": "Backend API URL for production (e.g., https://your-railway-url.railway.app/api)"
-        },
-        "VITE_SOCKET_URL": {
-            "description": "Backend Socket.IO URL for production (e.g., https://your-railway-url.railway.app)"
-        }
-    }
+    "framework": "vite"
 }
