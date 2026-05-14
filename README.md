@@ -4,402 +4,102 @@
 
 ### The Ultimate Real-Time Collaborative Coding Environment
 
-[![Version](https://img.shields.io/badge/version-1.0.0-2cbb5d?style=for-the-badge&logo=appveyor)](.)
-[![License](https://img.shields.io/badge/license-MIT-blue?style=for-the-badge&logo=mit)](.)
-[![Status](https://img.shields.io/badge/status-Active%20Development-brightgreen?style=for-the-badge)](.)  
 [![Live Demo](https://img.shields.io/badge/🌐%20Live%20Demo-code--real--time--77wt.vercel.app-6366f1?style=for-the-badge)](https://code-real-time-77wt.vercel.app/)
+[![Status](https://img.shields.io/badge/status-Live-brightgreen?style=for-the-badge)]()
+[![License](https://img.shields.io/badge/license-MIT-blue?style=for-the-badge)]()
 
 **Say goodbye to screen-sharing and turn-based coding. CodeRoom is your next-generation workspace for seamless, simultaneous, and secure pair programming — right in your browser.**
 
-[🌐 **Live Demo**](https://code-real-time-77wt.vercel.app/) · [✨ Features](#-features-that-supercharge-your-workflow) · [🚀 Quick Start](#-quick-start) · [🏗 Architecture](#-system-architecture) · [🔌 API Reference](#-api-reference) · [🤝 Contributing](#-contributing)
+### 🌐 [➜ Try it now: code-real-time-77wt.vercel.app](https://code-real-time-77wt.vercel.app/)
 
 </div>
 
 ---
 
-## 🔥 Why CodeRoom?
+## 🔥 What is CodeRoom?
 
-Remote collaboration shouldn't feel remote. CodeRoom is a full-stack collaborative code editor designed to dissolve the distance between developers, making pair programming, technical interviews, and team debugging as natural as sitting at the same desk.
+CodeRoom is a **full-stack real-time collaborative code editor** that lets multiple developers write, run, and debug code together — simultaneously, from anywhere in the world. No plugins, no downloads, just open the link and start coding.
 
-- **🌟 Zero-Friction Collaboration** — Code changes propagate to all participants within milliseconds via persistent WebSocket connections, with debounced persistence to MongoDB ensuring no work is ever lost.
-- **⚡ Run Anywhere, Compile Anything** — Beyond editing, CodeRoom provides a complete workflow: compile & run code in 7 languages, inspect output together, chat in context, and leverage AI assistance — all without leaving the editor.
-- **🔒 Privacy-First Rooms** — Your codebase is your castle. Rooms support optional bcrypt-hashed password protection, giving teams control over who can access their collaborative sessions.
+- **⚡ Real-time sync** — Every keystroke is instantly shared with all participants in the room.
+- **💻 Multi-language execution** — Write and run code in 7 programming languages without leaving the browser.
+- **🤖 AI-powered assistant** — Integrated Google Gemini AI to explain, fix, and optimize your code on demand.
+- **🔒 Private rooms** — Protect your sessions with optional password-protected rooms.
 
 ---
 
-## ✨ Features That Supercharge Your Workflow
+## ✨ Core Features
 
-### 🏎️ Hyper-Fast Real-Time Sync
-
-CodeRoom employs a WebSocket-driven synchronization model using Socket.IO. Every keystroke is captured, debounced at 300ms on the client side, then broadcast to all connected peers and persisted to MongoDB. Remote cursors are rendered with per-user color coding and auto-hide after 5 seconds of inactivity, providing spatial awareness without visual clutter.
+### 👥 Real-Time Collaboration
+Join the same room with your teammates and watch code changes appear instantly on everyone's screen. Remote cursors show you exactly where each collaborator is working — like Google Docs but for code.
 
 ### 💻 Multi-Language Code Execution
+Write and run code directly in the browser across 7 languages:
 
-Code execution is powered by the **Wandbox** compilation service, supporting 7 languages with production-grade compilers:
-
-| Language | Compiler / Runtime | Version |
-|---|---|---|
-| C++ | GCC | 13.2.0 |
-| Python | CPython | 3.12.7 |
-| Java | OpenJDK | 22 |
-| JavaScript | Node.js | 20.17.0 |
-| TypeScript | TypeScript Compiler | 5.6.2 |
-| C# | .NET Core | 8.0.402 |
-| PHP | PHP | 8.3.12 |
-
-Execution results (stdout, stderr, exit codes) are synchronized across all room participants in real time, enabling collaborative debugging sessions.
-
-### 🤖 Integrated AI Assistant
-
-An integrated AI assistant powered by **Google Gemini 2.5 Flash** provides four specialized operations streamed in real-time without breaking your flow:
-
-| Operation | Description |
+| Language | Runtime |
 |---|---|
-| **Explain** | Analyzes and explains code logic, highlighting potential issues |
-| **Fix Bugs** | Identifies bugs, explains root causes, and provides corrected code |
-| **Optimize** | Suggests performance improvements and cleaner code patterns |
-| **Free Chat** | Context-aware conversation with full access to the current codebase |
+| C++ | GCC 13.2.0 |
+| Python | CPython 3.12 |
+| Java | OpenJDK 22 |
+| JavaScript | Node.js 20 |
+| TypeScript | TSC 5.6 |
+| C# | .NET Core 8 |
+| PHP | PHP 8.3 |
 
-All AI responses are delivered via **Server-Sent Events (SSE)**, producing a real-time streaming effect. The AI panel is implemented as a draggable, resizable overlay (`react-rnd`) that doesn't interfere with the editing workspace.
+### 🤖 AI Code Assistant (Google Gemini)
+Select any code and get instant AI-powered help:
+- **Explain** — Understand what the code does, step by step.
+- **Fix Bugs** — Identify and correct errors with clear explanations.
+- **Optimize** — Get suggestions to improve performance and readability.
+- **Chat** — Have a free-form conversation with full awareness of your codebase.
 
-### 🛡️ Room System & Access Control
+### 🛡️ Room Management
+- Create rooms with auto-generated IDs.
+- Set an optional password to keep sessions private.
+- See who's online and who has previously joined (offline members).
+- Browse and search all public rooms.
 
-- **Room creation** with auto-generated 8-character UUIDs
-- **Optional password protection** — passwords are hashed with bcrypt (salt rounds = 10) and verified server-side before granting access
-- **Participant tracking** — distinguishes between online (active WebSocket connection) and offline (previously joined but disconnected) members
-- **Code history** — up to 20 snapshots per room with per-snapshot metadata (author, timestamp, language)
+### 📜 Code History
+Save up to 20 snapshots per room. Restore any previous version of the code with a single click — a lightweight version control system built right in.
 
-### ⌨️ Production-Grade Editor
+### ⌨️ Monaco Editor
+The same editor engine that powers **Visual Studio Code**, with full syntax highlighting, IntelliSense, minimap, and configurable themes (Dark, Light, High Contrast).
 
-Built on **Monaco Editor** (the same engine powering VS Code), the editor provides:
-- Full syntax highlighting and IntelliSense for all 7 supported languages
-- Configurable themes (VS Dark, VS Light, High Contrast)
-- Adjustable font size, minimap toggle, and word wrap settings
-- Stdin input support for interactive programs
-
----
-
-## 🚀 Quick Start
-
-Get your collaborative environment running locally in seconds.
-
-### Prerequisites
-- Node.js (v20+)
-- MongoDB (Running locally or via Atlas)
-- Google Gemini API Key
-
-### Installation
-
-1. **Clone the repo**
-   ```bash
-   git clone <repository-url>
-   cd Project_code_realTime
-   ```
-
-2. **Setup the Backend Server**
-   ```bash
-   cd severApp
-   npm install
-   ```
-   Create a `.env` file in `severApp/`:
-   ```env
-   MONGO_URI=mongodb://localhost:27017/coderoom
-   JWT_SECRET=super_secret_key
-   GEMINI_API_KEY=your_gemini_api_key
-   PORT=3001
-   ```
-   Start the server:
-   ```bash
-   npm start
-   ```
-
-3. **Setup the Frontend Client**
-   ```bash
-   cd ../app_code_realTime
-   npm install
-   npm run dev
-   ```
-
-4. **Start Coding!**  
-   Open `http://localhost:5173` in your browser. Create a room, share the link, and build together!
+### 💬 Room Chat
+Communicate with teammates without switching apps — an integrated real-time chat panel is built directly into the editor sidebar.
 
 ---
 
-## 🏗 System Architecture
+## 🖥️ Tech Stack
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│                   CLIENT  (React 19 + Vite 8)                │
-│                                                              │
-│  ┌──────────┐  ┌──────────┐  ┌───────────┐  ┌────────────┐   │
-│  │  Login   │  │ RoomMenu │  │  CodeApp  │  │  AIPanel   │   │
-│  │  (Auth)  │  │  (Lobby) │  │ (Editor)  │  │ (Gemini)   │   │
-│  └────┬─────┘  └────┬─────┘  └─────┬─────┘  └─────┬──────┘   │
-│       │             │              │              │          │
-│       └─────────────┴──────┬───────┴──────────────┘          │
-│                            │                                 │
-│                   useSocket (Custom Hook)                    │
-│              ┌─────────────┴───────────────┐                 │
-│              │ REST API        Socket.IO   │                 │
-└──────────────┼─────────────────────────────┼─────────────────┘
-               │              │              │
-               ▼              ▼              ▼
-┌──────────────────────────────────────────────────────────────┐
-│                SERVER  (Express 5 + Socket.IO 4.8)           │
-│                                                              │
-│  ┌──────────┐  ┌──────────┐  ┌───────────┐  ┌────────────┐   │
-│  │ Auth API │  │ Room API │  │ Code API  │  │   AI API   │   │
-│  │ (JWT)    │  │ (CRUD)   │  │ (Wandbox) │  │   (SSE)    │   │
-│  └────┬─────┘  └────┬─────┘  └─────┬─────┘  └─────┬──────┘   │
-│       │             │              │              │          │
-│       ▼             ▼              │              ▼          │
-│  ┌─────────────────────────┐   ┌───┴─────┐   ┌──────────┐    │
-│  │    MongoDB (Mongoose)   │   │ Wandbox │   │  Gemini  │    │
-│  │  Users · Rooms · History│   │   API   │   │   API    │    │
-│  └─────────────────────────┘   └─────────┘   └──────────┘    │
-└──────────────────────────────────────────────────────────────┘
-```
-
-### Communication Patterns
-
-| Pattern | Protocol | Use Case |
-|---|---|---|
-| **REST API** | HTTP/JSON | Authentication, room CRUD, code execution |
-| **WebSocket** | Socket.IO | Code sync, cursor tracking, chat, output sync |
-| **SSE** | `text/event-stream` | AI response streaming (Gemini) |
-
-### Data Flow: Code Synchronization
-
-```
-User A types code
-       │
-       ▼ 
- Frontend debounce (300ms)
-       │
-       ▼
- socket.emit('code-change')  ──►  Server receives
-       │                                │
-       │                     ┌──────────┴──────────┐
-       │                     ▼                     ▼
-       │              socket.to(room)        Room.findOneAndUpdate()
-       │              .emit('code-sync')     (persist to MongoDB)
-       │                     │
-       │                     ▼
-       │              User B, C, ... receive
-       │              and update Monaco Editor
-       ▼
- Local editor updates immediately (optimistic)
-```
-
----
-
-## 🛠 Technology Stack
-
-### Frontend
-
-| Technology | Version | Purpose |
-|---|---|---|
-| **React** | 19.2.4 | Component-based UI with React Compiler optimization |
-| **Vite** | 8.0.1 | ESM-native build tool & HMR dev server |
-| **Monaco Editor** | 0.55.1 | VS Code's editor engine (syntax, IntelliSense, minimap) |
-| **Socket.IO Client** | 4.8.3 | Persistent WebSocket with automatic reconnection |
-| **React Router** | 7.14.0 | Client-side routing & navigation guards |
-| **react-rnd** | 10.5.3 | Draggable & resizable AI panel |
-| **SASS** | 1.98.0 | Modular SCSS stylesheets per component |
-| **Bootstrap** | 5.3.8 | Auth pages layout & utilities |
-
-### Backend
-
-| Technology | Version | Purpose |
-|---|---|---|
-| **Express** | 5.1.0 | HTTP server with async error handling |
-| **Socket.IO** | 4.8.1 | WebSocket server with room management |
-| **Mongoose** | 8.13.2 | MongoDB ODM with schema validation |
-| **JWT** | 9.0.2 | Stateless authentication tokens |
-| **bcryptjs** | 3.0.2 | Password hashing (user accounts + room passwords) |
-| **@google/generative-ai** | 0.24.1 | Gemini 2.5 Flash integration with streaming |
-| **uuid** | 11.1.0 | Cryptographic room ID generation |
-
-### External Services
-
-| Service | Role |
+| Layer | Technologies |
 |---|---|
-| **Wandbox** (`wandbox.org`) | Serverless code compilation & execution (7 languages) |
-| **Google Gemini 2.5 Flash** | Generative AI for code analysis, debugging & optimization |
-| **MongoDB** | Document database for users, rooms, code, and snapshot history |
+| **Frontend** | React 19, Vite 8, Monaco Editor, Socket.IO Client, React Router 7, SCSS |
+| **Backend** | Node.js, Express 5, Socket.IO 4, MongoDB, Mongoose, JWT, bcrypt |
+| **AI** | Google Gemini 2.5 Flash (streaming via SSE) |
+| **Code Execution** | Wandbox API |
+| **Deployment** | Vercel (Frontend) · Render (Backend) · MongoDB Atlas (Database) |
 
 ---
 
-## 📁 Project Structure
+## 🔐 Security
 
-```
-Project_code_realTime/
-│
-├── app_code_realTime/                  # ── Frontend Application ──
-│   ├── src/
-│   │   ├── App.jsx                     # Root router (Login → RoomMenu → CodeApp)
-│   │   ├── CodeApp.jsx                 # Main editor workspace orchestrator
-│   │   ├── hooks/
-│   │   │   └── useSocket.js            # Centralized Socket.IO hook
-│   │   └── component/
-│   │       ├── Login/                  # JWT authentication (register/login)
-│   │       ├── RoomMenu/              # Room lobby: create, join, search, browse
-│   │       ├── Header/                # Toolbar: language selector, run, AI, share
-│   │       ├── Editor/                # Monaco Editor wrapper with remote cursors
-│   │       ├── Sidebar/              # Online/offline members + real-time chat
-│   │       ├── OutputPanel/          # Execution output console + stdin input
-│   │       ├── AIPanel/              # Gemini AI assistant (draggable overlay)
-│   │       ├── History/              # Code snapshot timeline (save/restore)
-│   │       └── EditorSettings/       # Theme, font, minimap, word wrap config
-│   ├── vite.config.js
-│   └── package.json
-│
-└── severApp/                           # ── Backend Server ──
-    ├── index.js                        # Express + Socket.IO bootstrap, event handlers
-    ├── middleware/
-    │   └── auth.js                     # JWT verification (HTTP + Socket handshake)
-    ├── routes/
-    │   ├── auth.js                     # POST /register, /login, /logout | GET /me
-    │   ├── rooms.js                    # Room CRUD + password verification
-    │   ├── code.js                     # POST /execute → Wandbox proxy
-    │   └── ai.js                       # AI endpoints with SSE streaming
-    ├── models/
-    │   ├── User.js                     # { username, email, password (bcrypt) }
-    │   └── Room.js                     # { roomId, code, language, participants, history[] }
-    └── package.json
-```
-
----
-
-## 🔌 API Reference
-
-### Authentication — `/api/auth`
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/register` | Create new account → returns JWT |
-| `POST` | `/login` | Authenticate credentials → returns JWT |
-| `POST` | `/logout` | Invalidate session |
-| `GET` | `/me` | Get authenticated user profile |
-
-### Rooms — `/api/rooms`
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/` | Create room (optional: `password` field for private rooms) |
-| `GET` | `/` | List rooms the authenticated user has joined |
-| `GET` | `/all?search=` | Search & browse all rooms |
-| `GET` | `/:roomId` | Get room details (code, language, participants) |
-| `GET` | `/:roomId/history` | Retrieve code snapshots (max 20) |
-| `POST` | `/:roomId/verify-password` | Verify room password before joining |
-
-### Code Execution — `/api/code`
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/execute` | Compile & run code via Wandbox (body: `{ code, language, stdin }`) |
-
-### AI Assistant — `/api/ai`
-
-All AI endpoints accept `{ code, language }` and return `text/event-stream` (SSE).
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/explain` | Explain code logic and identify potential issues |
-| `POST` | `/fix` | Detect bugs, explain causes, provide corrected code |
-| `POST` | `/optimize` | Suggest performance improvements and cleaner code patterns |
-| `POST` | `/chat` | Free-form conversation with code context (body includes `message`) |
-
----
-
-## 🔄 Socket.IO Event Protocol
-
-### Client → Server
-
-| Event | Payload | Description |
-|---|---|---|
-| `join-room` | `roomId: string` | Join a room (auto-creates if not exists) |
-| `code-change` | `{ roomId, code }` | Broadcast code update (debounced 300ms client-side) |
-| `language-change` | `{ roomId, language }` | Switch programming language for the room |
-| `output-sync` | `{ roomId, output, isRunning }` | Share execution output with all members |
-| `send-message` | `{ roomId, text }` | Send chat message (max 500 chars) |
-| `save-snapshot` | `{ roomId, code, language }` | Save a code snapshot to history |
-| `cursor-move` | `{ roomId, cursorData }` | Broadcast cursor position for remote cursor rendering |
-
-### Server → Client
-
-| Event | Payload | Description |
-|---|---|---|
-| `room-state` | `{ code, language, owner, ownerId, participants }` | Full room state on join |
-| `code-sync` | `{ code }` | Code update from another participant |
-| `language-sync` | `{ language }` | Language change from another participant |
-| `output-update` | `{ output, isRunning }` | Execution output from another participant |
-| `users-update` | `[{ username, socketId, joinedAt }]` | Online users list (on any join/leave) |
-| `user-joined` | `{ username, onlineCount }` | Notification: new user joined |
-| `user-left` | `{ username, onlineCount }` | Notification: user disconnected |
-| `receive-message` | `{ username, text, timestamp }` | Chat message broadcast |
-| `snapshot-saved` | `{ code, language, savedBy, savedAt }` | Snapshot confirmation |
-| `cursor-update` | `{ socketId, username, ...cursorData }` | Remote cursor position |
-
----
-
-## 🔐 Security Model
-
-| Layer | Mechanism | Details |
-|---|---|---|
-| **Authentication** | JWT (HS256) | Stateless tokens via `Authorization: Bearer <token>` header |
-| **Socket Auth** | Handshake token | JWT verified in `io.use()` middleware before connection |
-| **User Passwords** | bcrypt | Salted hash (configurable rounds) for user account passwords |
-| **Room Passwords** | bcrypt | Optional per-room password, hashed with 10 salt rounds |
-| **Input Validation** | Server-side | Room IDs sanitized, chat messages capped at 500 chars, code body limited to 1MB |
-| **CORS** | Origin whitelist | Restricted to `localhost:*` in development; configurable via `ALLOWED_ORIGINS` env var in production |
-
----
-
-## ⚙️ Environment Configuration
-
-The backend requires a `.env` file in the `severApp/` directory:
-
-```env
-# MongoDB connection URI
-MONGO_URI=mongodb://localhost:27017/coderoom
-
-# JWT signing secret (use a strong, random string in production)
-JWT_SECRET=<your-secret-key>
-
-# Google Gemini API Key — obtain at https://aistudio.google.com/apikey
-GEMINI_API_KEY=<your-gemini-api-key>
-
-# Server port (default: 3001)
-PORT=3001
-```
-
-> **Note**: The `.env` file must never be committed to version control. Ensure it is listed in `.gitignore`.
-
----
-
-## 📝 Technical Notes
-
-- **Graceful shutdown** — The server handles `SIGINT` / `SIGTERM` signals, closing Socket.IO connections, HTTP server, and MongoDB connections in order before exiting.
-- **Ghost user prevention** — On disconnect, users are removed from all rooms they've joined (not just the current one), preventing stale entries in the online users list.
-- **Lazy AI initialization** — The Gemini client is initialized on first API call rather than at module load time, avoiding crashes when the API key is not configured.
-- **Optimistic UI** — Code changes are applied locally immediately, then broadcast asynchronously, ensuring the typing experience feels native regardless of network latency.
-- **Snapshot cap** — MongoDB's `$slice: -20` operator is used to enforce the 20-snapshot limit per room at the database level, preventing unbounded growth.
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome. Please open an issue first to discuss proposed changes before submitting a pull request.
+- All API endpoints are protected with **JWT authentication**.
+- Socket connections are verified via **JWT handshake** before joining any room.
+- User and room passwords are **bcrypt-hashed** — never stored as plain text.
+- Room messages are capped at **500 characters** per message; code submissions at **1MB**.
 
 ---
 
 <div align="center">
 
+## 🚀 Ready to collaborate?
+
+### [➜ Open CodeRoom: code-real-time-77wt.vercel.app](https://code-real-time-77wt.vercel.app/)
+
+*Create a room. Share the link. Code together.*
+
+---
+
 **Built with ❤️ by CodeRoom Team**
-
-*Stop sharing your screen. Start sharing your code.*
-
-🌐 **[Try it live → code-real-time-77wt.vercel.app](https://code-real-time-77wt.vercel.app/)**
 
 </div>
