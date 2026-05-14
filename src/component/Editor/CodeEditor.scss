@@ -6,20 +6,15 @@
   background: var(--bg-editor);
 }
 
-
 .monaco-editor-container {
   flex: 1;
   position: relative;
   overflow: hidden;
-  border-bottom-left-radius: 8px;
-  border-bottom-right-radius: 8px;
 
-  /* Live Cursor styles */
   .remote-cursor {
     border-left: 2px solid;
     position: relative;
     box-sizing: border-box;
-
     &::before {
       content: '';
       position: absolute;
@@ -43,7 +38,7 @@
     pointer-events: none;
     white-space: nowrap;
     z-index: 10;
-    font-family: var(--font-family-sans);
+    font-family: 'Inter', sans-serif;
     opacity: 0;
     transition: opacity 0.2s ease-in-out;
   }
@@ -54,7 +49,6 @@
   }
 }
 
-/* Toolbar above the editor */
 .editor-toolbar {
   display: flex;
   align-items: center;
@@ -66,30 +60,10 @@
   flex-shrink: 0;
 }
 
-.editor-toolbar-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.toolbar-label {
-  font-size: 12px;
-  color: var(--text-muted);
-  font-weight: 500;
-}
-
-.toolbar-divider {
-  width: 1px;
-  height: 16px;
-  background: var(--border-color);
-}
-
-.editor-toolbar-right {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
+.editor-toolbar-left { display: flex; align-items: center; gap: 8px; }
+.toolbar-label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+.toolbar-divider { width: 1px; height: 16px; background: var(--border-color); }
+.editor-toolbar-right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
 
 .toolbar-action-btn {
   background: none;
@@ -97,7 +71,7 @@
   color: var(--text-muted);
   cursor: pointer;
   padding: 5px;
-  border-radius: 5px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -105,14 +79,9 @@
   gap: 4px;
   transition: all 0.14s;
   font-family: 'Inter', sans-serif;
+  &:hover { background: var(--bg-hover); color: var(--text-primary); }
 }
 
-.toolbar-action-btn:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
-}
-
-/* Actual textarea editor */
 .code-textarea {
   flex: 1;
   width: 100%;
@@ -127,9 +96,5 @@
   padding: 16px 20px;
   tab-size: 4;
   caret-color: var(--accent);
-}
-
-.code-textarea::placeholder {
-  color: var(--text-dim);
-  font-style: italic;
+  &::placeholder { color: var(--text-dim); font-style: italic; }
 }

@@ -7,7 +7,7 @@ import {
 import { LiaAccessibleIcon } from 'react-icons/lia';
 import './RoomMenu.scss';
 
-const API_URL = 'http://localhost:3001/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 const timeAgo = (dateStr) => {
   const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);

@@ -1,40 +1,38 @@
 <div align="center">
 
-# CodeRoom
+# 🚀 CodeRoom
 
-### Real-time Collaborative Code Editor
+### The Ultimate Real-Time Collaborative Coding Environment
 
-[![Version](https://img.shields.io/badge/version-1.0.0-2cbb5d?style=for-the-badge)](.)
-[![License](https://img.shields.io/badge/license-MIT-blue?style=for-the-badge)](.)
+[![Version](https://img.shields.io/badge/version-1.0.0-2cbb5d?style=for-the-badge&logo=appveyor)](.)
+[![License](https://img.shields.io/badge/license-MIT-blue?style=for-the-badge&logo=mit)](.)
 [![Status](https://img.shields.io/badge/status-Active%20Development-brightgreen?style=for-the-badge)](.)
 
-**A web-based collaborative coding environment that enables real-time multi-user code editing, execution, and AI-powered assistance — all within the browser.**
+**Say goodbye to screen-sharing and turn-based coding. CodeRoom is your next-generation workspace for seamless, simultaneous, and secure pair programming — right in your browser.**
 
-[Features](#-key-features) · [Architecture](#-system-architecture) · [Tech Stack](#-technology-stack) · [API Reference](#-api-reference) · [Contributing](#-contributing)
+[✨ Features](#-features-that-supercharge-your-workflow) · [🚀 Quick Start](#-quick-start) · [🏗 Architecture](#-system-architecture) · [🔌 API Reference](#-api-reference) · [🤝 Contributing](#-contributing)
 
 </div>
 
 ---
 
-## 📖 Overview
+## 🔥 Why CodeRoom?
 
-**CodeRoom** is a full-stack collaborative code editor designed to solve the problem of remote pair programming and real-time code collaboration. Unlike traditional code-sharing tools that rely on screen sharing or turn-based editing, CodeRoom provides a seamless, simultaneous editing experience where multiple developers can write, debug, and execute code together in real time.
+Remote collaboration shouldn't feel remote. CodeRoom is a full-stack collaborative code editor designed to dissolve the distance between developers, making pair programming, technical interviews, and team debugging as natural as sitting at the same desk.
 
-The platform is built around three core principles:
-
-- **Zero-latency collaboration** — Code changes propagate to all participants within milliseconds via persistent WebSocket connections, with debounced persistence to MongoDB ensuring no work is ever lost.
-- **Integrated development workflow** — Beyond editing, CodeRoom provides a complete workflow: compile & run code in 7 languages, inspect output together, chat in context, and leverage AI assistance — all without leaving the editor.
-- **Privacy-first room management** — Rooms support optional bcrypt-hashed password protection, giving teams control over who can access their collaborative sessions.
+- **🌟 Zero-Friction Collaboration** — Code changes propagate to all participants within milliseconds via persistent WebSocket connections, with debounced persistence to MongoDB ensuring no work is ever lost.
+- **⚡ Run Anywhere, Compile Anything** — Beyond editing, CodeRoom provides a complete workflow: compile & run code in 7 languages, inspect output together, chat in context, and leverage AI assistance — all without leaving the editor.
+- **🔒 Privacy-First Rooms** — Your codebase is your castle. Rooms support optional bcrypt-hashed password protection, giving teams control over who can access their collaborative sessions.
 
 ---
 
-## 🧩 Key Features
+## ✨ Features That Supercharge Your Workflow
 
-### Real-time Code Synchronization
+### 🏎️ Hyper-Fast Real-Time Sync
 
 CodeRoom employs a WebSocket-driven synchronization model using Socket.IO. Every keystroke is captured, debounced at 300ms on the client side, then broadcast to all connected peers and persisted to MongoDB. Remote cursors are rendered with per-user color coding and auto-hide after 5 seconds of inactivity, providing spatial awareness without visual clutter.
 
-### Multi-Language Code Execution
+### 💻 Multi-Language Code Execution
 
 Code execution is powered by the **Wandbox** compilation service, supporting 7 languages with production-grade compilers:
 
@@ -50,9 +48,9 @@ Code execution is powered by the **Wandbox** compilation service, supporting 7 l
 
 Execution results (stdout, stderr, exit codes) are synchronized across all room participants in real time, enabling collaborative debugging sessions.
 
-### AI-Powered Code Assistant
+### 🤖 Integrated AI Assistant
 
-An integrated AI assistant powered by **Google Gemini 2.5 Flash** provides four specialized operations:
+An integrated AI assistant powered by **Google Gemini 2.5 Flash** provides four specialized operations streamed in real-time without breaking your flow:
 
 | Operation | Description |
 |---|---|
@@ -63,23 +61,66 @@ An integrated AI assistant powered by **Google Gemini 2.5 Flash** provides four 
 
 All AI responses are delivered via **Server-Sent Events (SSE)**, producing a real-time streaming effect. The AI panel is implemented as a draggable, resizable overlay (`react-rnd`) that doesn't interfere with the editing workspace.
 
-### Room System & Access Control
+### 🛡️ Room System & Access Control
 
 - **Room creation** with auto-generated 8-character UUIDs
 - **Optional password protection** — passwords are hashed with bcrypt (salt rounds = 10) and verified server-side before granting access
-- **Participant tracking** — the system distinguishes between online (active WebSocket connection) and offline (previously joined but disconnected) members
-- **Room ownership** — the original creator is persisted and displayed, independent of join order
+- **Participant tracking** — distinguishes between online (active WebSocket connection) and offline (previously joined but disconnected) members
 - **Code history** — up to 20 snapshots per room with per-snapshot metadata (author, timestamp, language)
 
-### Editor Experience
+### ⌨️ Production-Grade Editor
 
 Built on **Monaco Editor** (the same engine powering VS Code), the editor provides:
-
 - Full syntax highlighting and IntelliSense for all 7 supported languages
 - Configurable themes (VS Dark, VS Light, High Contrast)
 - Adjustable font size, minimap toggle, and word wrap settings
 - Stdin input support for interactive programs
-- One-click room link sharing
+
+---
+
+## 🚀 Quick Start
+
+Get your collaborative environment running locally in seconds.
+
+### Prerequisites
+- Node.js (v20+)
+- MongoDB (Running locally or via Atlas)
+- Google Gemini API Key
+
+### Installation
+
+1. **Clone the repo**
+   ```bash
+   git clone <repository-url>
+   cd Project_code_realTime
+   ```
+
+2. **Setup the Backend Server**
+   ```bash
+   cd severApp
+   npm install
+   ```
+   Create a `.env` file in `severApp/`:
+   ```env
+   MONGO_URI=mongodb://localhost:27017/coderoom
+   JWT_SECRET=super_secret_key
+   GEMINI_API_KEY=your_gemini_api_key
+   PORT=3001
+   ```
+   Start the server:
+   ```bash
+   npm start
+   ```
+
+3. **Setup the Frontend Client**
+   ```bash
+   cd ../app_code_realTime
+   npm install
+   npm run dev
+   ```
+
+4. **Start Coding!**  
+   Open `http://localhost:5173` in your browser. Create a room, share the link, and build together!
 
 ---
 
@@ -93,11 +134,11 @@ Built on **Monaco Editor** (the same engine powering VS Code), the editor provid
 │  │  Login   │  │ RoomMenu │  │  CodeApp  │  │  AIPanel   │   │
 │  │  (Auth)  │  │  (Lobby) │  │ (Editor)  │  │ (Gemini)   │   │
 │  └────┬─────┘  └────┬─────┘  └─────┬─────┘  └─────┬──────┘   │
-│       │              │              │              │         │
-│       └──────────────┴──────┬───────┴──────────────┘         │
-│                             │                                │
-│                    useSocket (Custom Hook)                   │
-│              ┌──────────────┴──────────────┐                 │
+│       │             │              │              │          │
+│       └─────────────┴──────┬───────┴──────────────┘          │
+│                            │                                 │
+│                   useSocket (Custom Hook)                    │
+│              ┌─────────────┴───────────────┐                 │
 │              │ REST API        Socket.IO   │                 │
 └──────────────┼─────────────────────────────┼─────────────────┘
                │              │              │
@@ -109,9 +150,9 @@ Built on **Monaco Editor** (the same engine powering VS Code), the editor provid
 │  │ Auth API │  │ Room API │  │ Code API  │  │   AI API   │   │
 │  │ (JWT)    │  │ (CRUD)   │  │ (Wandbox) │  │   (SSE)    │   │
 │  └────┬─────┘  └────┬─────┘  └─────┬─────┘  └─────┬──────┘   │
-│       │              │              │              │         │
-│       ▼              ▼              │              ▼         │
-│  ┌─────────────────────────┐   ┌────┴────┐   ┌──────────┐    │
+│       │             │              │              │          │
+│       ▼             ▼              │              ▼          │
+│  ┌─────────────────────────┐   ┌───┴─────┐   ┌──────────┐    │
 │  │    MongoDB (Mongoose)   │   │ Wandbox │   │  Gemini  │    │
 │  │  Users · Rooms · History│   │   API   │   │   API    │    │
 │  └─────────────────────────┘   └─────────┘   └──────────┘    │
@@ -131,7 +172,7 @@ Built on **Monaco Editor** (the same engine powering VS Code), the editor provid
 ```
 User A types code
        │
-       ▼
+       ▼ 
  Frontend debounce (300ms)
        │
        ▼
@@ -265,7 +306,7 @@ All AI endpoints accept `{ code, language }` and return `text/event-stream` (SSE
 |---|---|---|
 | `POST` | `/explain` | Explain code logic and identify potential issues |
 | `POST` | `/fix` | Detect bugs, explain causes, provide corrected code |
-| `POST` | `/optimize` | Suggest performance and readability improvements |
+| `POST` | `/optimize` | Suggest performance improvements and cleaner code patterns |
 | `POST` | `/chat` | Free-form conversation with code context (body includes `message`) |
 
 ---
@@ -356,6 +397,6 @@ Contributions are welcome. Please open an issue first to discuss proposed change
 
 **Built with ❤️ by CodeRoom Team**
 
-*Real-time collaboration, reimagined for developers.*
+*Stop sharing your screen. Start sharing your code.*
 
 </div>

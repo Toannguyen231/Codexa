@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
 
 // src/hooks/useSocket.js (hoặc file tương ứng của bạn)
-const SERVER_URL = 'http://localhost:3001';
+const SERVER_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001';
 
 /**
  * Hook: useSocket — quản lý kết nối Socket.IO cho real-time code sync

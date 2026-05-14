@@ -20,7 +20,8 @@ const HistoryPanel = ({ roomId, token, onRestore, onClose, socket, isConnected, 
     const fetchHistory = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`http://localhost:3001/api/rooms/${roomId}/history`, {
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+            const res = await fetch(`${apiUrl}/rooms/${roomId}/history`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const data = await res.json();

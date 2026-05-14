@@ -17,7 +17,8 @@ const AIPanel = ({ code, language, onClose }) => {
     setMessages(prev => [...prev, { role: 'ai', text: '', isStreaming: true }]);
 
     try {
-      const response = await fetch(`http://localhost:3001/api/ai/${endpoint}`, {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+      const response = await fetch(`${apiUrl}/ai/${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiFacebook, FiTwitter, FiLinkedin } from 'react-icons/fi';
-import trollImage from './img/Anhrtroll.png';
+import { FiMail, FiLock, FiUser, FiCode, FiUsers, FiZap, FiCpu } from 'react-icons/fi';
+import { LiaAccessibleIcon } from 'react-icons/lia';
 import './Login.css';
 
-const API_URL = 'http://localhost:3001/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -56,102 +56,135 @@ const Login = () => {
     };
 
     return (
-        <section className="vh-100 login-page-wrapper">
-            <div className="container-fluid h-custom">
-                <div className="row d-flex justify-content-center align-items-center h-100" style={{ marginTop: '38px' }}>
-                    <div className="col-md-9 col-lg-6 col-xl-5">
-                        <img
-                            src={trollImage}
-                            className="img-fluid"
-                            alt="Sample image"
-                        />
+        <section className="login-page-wrapper">
+            <div className="login-container">
+                {/* ── Left: Branding ── */}
+                <div className="login-brand">
+                    <div className="login-brand-logo">
+                        <LiaAccessibleIcon size={36} color="#fff" />
                     </div>
-                    <div className="col-md-8 col-lg-6 col-xl-4 offset-xl-1">
-                        <form onSubmit={handleSubmit}>
-                            <div className="d-flex flex-row align-items-center justify-content-center justify-content-lg-start">
-                                <p className="lead fw-normal mb-0 me-3" style={{ color: 'var(--text-primary)' }}>Sign in with</p>
-                                <button type="button" className="btn btn-primary btn-floating mx-1" style={{ borderRadius: '50%', padding: '10px 15px' }}>
-                                    <FiFacebook />
-                                </button>
-                                <button type="button" className="btn btn-primary btn-floating mx-1" style={{ borderRadius: '50%', padding: '10px 15px' }}>
-                                    <FiTwitter />
-                                </button>
-                                <button type="button" className="btn btn-primary btn-floating mx-1" style={{ borderRadius: '50%', padding: '10px 15px' }}>
-                                    <FiLinkedin />
-                                </button>
+                    <h1>CodeRoom</h1>
+                    <p>Nền tảng lập trình cộng tác thời gian thực — code cùng nhau, mọi lúc mọi nơi.</p>
+
+                    <div className="login-brand-features">
+                        <div className="login-feature-item">
+                            <div className="login-feature-icon"><FiCode size={15} /></div>
+                            <span>Monaco Editor — engine giống VS Code</span>
+                        </div>
+                        <div className="login-feature-item">
+                            <div className="login-feature-icon"><FiUsers size={15} /></div>
+                            <span>Real-time sync — code cùng nhiều người</span>
+                        </div>
+                        <div className="login-feature-item">
+                            <div className="login-feature-icon"><FiZap size={15} /></div>
+                            <span>Chạy code 7 ngôn ngữ trực tiếp</span>
+                        </div>
+                        <div className="login-feature-item">
+                            <div className="login-feature-icon"><FiCpu size={15} /></div>
+                            <span>AI Assistant — Gemini 2.5 Flash</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* ── Right: Form ── */}
+                <div className="login-form-panel">
+                    <h2 className="login-form-title">
+                        {isRegister ? 'Tạo tài khoản' : 'Chào mừng trở lại'}
+                    </h2>
+                    <p className="login-form-subtitle">
+                        {isRegister
+                            ? 'Đăng ký để bắt đầu lập trình cùng bạn bè'
+                            : 'Đăng nhập để tiếp tục coding session'}
+                    </p>
+
+                    <form onSubmit={handleSubmit}>
+                        {/* Error */}
+                        {error && (
+                            <div className="login-error">
+                                ⚠️ {error}
                             </div>
+                        )}
 
-                            <div className="divider d-flex align-items-center my-4">
-                                <p className="text-center fw-bold mx-3 mb-0" style={{ color: 'var(--text-muted)' }}>Or</p>
-                            </div>
-
-                            {/* Error message */}
-                            {error && (
-                                <div style={{ color: '#f44336', fontSize: '13px', marginBottom: '12px', padding: '8px 12px', background: 'rgba(244,67,54,0.1)', borderRadius: '6px' }}>
-                                    {error}
-                                </div>
-                            )}
-
-                            {/* Username (chỉ hiện khi Register) */}
-                            {isRegister && (
-                                <div className="form-outline mb-4">
+                        {/* Username (Register only) */}
+                        {isRegister && (
+                            <div className="login-field">
+                                <label htmlFor="username">Username</label>
+                                <div className="login-input-wrap">
                                     <input
                                         type="text"
                                         id="username"
-                                        className="form-control form-control-lg"
-                                        placeholder="Enter username"
+                                        placeholder="Nhập tên hiển thị"
                                         value={username}
                                         onChange={(e) => setUsername(e.target.value)}
                                         required
+                                        autoComplete="username"
                                     />
-                                    <label className="form-label" htmlFor="username" style={{ color: 'var(--text-muted)' }}>Username</label>
+                                    <FiUser size={16} />
                                 </div>
-                            )}
+                            </div>
+                        )}
 
-                            {/* Email input */}
-                            <div className="form-outline mb-4">
+                        {/* Email */}
+                        <div className="login-field">
+                            <label htmlFor="email">Email</label>
+                            <div className="login-input-wrap">
                                 <input
                                     type="email"
                                     id="email"
-                                    className="form-control form-control-lg"
-                                    placeholder="Enter a valid email address"
+                                    placeholder="you@example.com"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
+                                    autoComplete="email"
                                 />
-                                <label className="form-label" htmlFor="email" style={{ color: 'var(--text-muted)' }}>Email address</label>
+                                <FiMail size={16} />
                             </div>
+                        </div>
 
-                            {/* Password input */}
-                            <div className="form-outline mb-3">
+                        {/* Password */}
+                        <div className="login-field">
+                            <label htmlFor="password">Mật khẩu</label>
+                            <div className="login-input-wrap">
                                 <input
                                     type="password"
                                     id="password"
-                                    className="form-control form-control-lg"
-                                    placeholder="Enter password"
+                                    placeholder="••••••••"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
+                                    autoComplete={isRegister ? 'new-password' : 'current-password'}
                                 />
-                                <label className="form-label" htmlFor="password" style={{ color: 'var(--text-muted)' }}>Password</label>
+                                <FiLock size={16} />
                             </div>
+                        </div>
 
-                            <div className="text-center text-lg-start mt-4 pt-2">
-                                <button type="submit" className="btn btn-primary btn-lg" style={{ paddingLeft: '2.5rem', paddingRight: '2.5rem', backgroundColor: '#06b6d4', borderColor: '#06b6d4' }} disabled={loading}>
-                                    {loading ? 'Loading...' : (isRegister ? 'Register' : 'Login')}
-                                </button>
-                                <p className="small fw-bold mt-2 pt-1 mb-0" style={{ color: 'var(--text-primary)' }}>
-                                    {isRegister ? 'Already have an account?' : "Don't have an account?"}{' '}
-                                    <a href="#!" className="link-danger" style={{ color: '#06b6d4' }} onClick={(e) => { e.preventDefault(); setIsRegister(!isRegister); setError(''); }}>
-                                        {isRegister ? 'Login' : 'Register'}
-                                    </a>
-                                </p>
-                            </div>
-                        </form>
-                    </div>
+                        {/* Submit */}
+                        <button
+                            type="submit"
+                            className="login-submit"
+                            disabled={loading}
+                        >
+                            {loading ? 'Đang xử lý...' : (isRegister ? 'Đăng ký' : 'Đăng nhập')}
+                        </button>
+
+                        {/* Toggle */}
+                        <div className="login-toggle">
+                            {isRegister ? 'Đã có tài khoản?' : 'Chưa có tài khoản?'}{' '}
+                            <a
+                                href="#!"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setIsRegister(!isRegister);
+                                    setError('');
+                                }}
+                            >
+                                {isRegister ? 'Đăng nhập' : 'Đăng ký ngay'}
+                            </a>
+                        </div>
+                    </form>
                 </div>
             </div>
-        </section >
+        </section>
     );
 };
 
