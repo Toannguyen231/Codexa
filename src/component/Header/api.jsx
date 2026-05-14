@@ -30,6 +30,5 @@ export const executeCode = async (displayLanguage, sourceCode, stdin = "") => {
             status: result.status || null,
         };
     }
-
     return result;
 };

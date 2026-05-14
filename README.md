@@ -6,11 +6,12 @@
 
 [![Version](https://img.shields.io/badge/version-1.0.0-2cbb5d?style=for-the-badge&logo=appveyor)](.)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=for-the-badge&logo=mit)](.)
-[![Status](https://img.shields.io/badge/status-Active%20Development-brightgreen?style=for-the-badge)](.)
+[![Status](https://img.shields.io/badge/status-Active%20Development-brightgreen?style=for-the-badge)](.)  
+[![Live Demo](https://img.shields.io/badge/🌐%20Live%20Demo-code--real--time--77wt.vercel.app-6366f1?style=for-the-badge)](https://code-real-time-77wt.vercel.app/)
 
 **Say goodbye to screen-sharing and turn-based coding. CodeRoom is your next-generation workspace for seamless, simultaneous, and secure pair programming — right in your browser.**
 
-[✨ Features](#-features-that-supercharge-your-workflow) · [🚀 Quick Start](#-quick-start) · [🏗 Architecture](#-system-architecture) · [🔌 API Reference](#-api-reference) · [🤝 Contributing](#-contributing)
+[🌐 **Live Demo**](https://code-real-time-77wt.vercel.app/) · [✨ Features](#-features-that-supercharge-your-workflow) · [🚀 Quick Start](#-quick-start) · [🏗 Architecture](#-system-architecture) · [🔌 API Reference](#-api-reference) · [🤝 Contributing](#-contributing)
 
 </div>
 
@@ -351,7 +352,7 @@ All AI endpoints accept `{ code, language }` and return `text/event-stream` (SSE
 | **User Passwords** | bcrypt | Salted hash (configurable rounds) for user account passwords |
 | **Room Passwords** | bcrypt | Optional per-room password, hashed with 10 salt rounds |
 | **Input Validation** | Server-side | Room IDs sanitized, chat messages capped at 500 chars, code body limited to 1MB |
-| **CORS** | Origin whitelist | Restricted to `localhost:*` in development |
+| **CORS** | Origin whitelist | Restricted to `localhost:*` in development; configurable via `ALLOWED_ORIGINS` env var in production |
 
 ---
 
@@ -398,5 +399,7 @@ Contributions are welcome. Please open an issue first to discuss proposed change
 **Built with ❤️ by CodeRoom Team**
 
 *Stop sharing your screen. Start sharing your code.*
+
+🌐 **[Try it live → code-real-time-77wt.vercel.app](https://code-real-time-77wt.vercel.app/)**
 
 </div>
