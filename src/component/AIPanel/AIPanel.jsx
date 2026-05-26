@@ -65,7 +65,6 @@ const AIPanel = ({ code, language, onClose }) => {
               try {
                 const data = JSON.parse(dataStr);
                 aiText += data.text;
-
                 // Update last message
                 setMessages(prev => {
                   const newMsgs = [...prev];
