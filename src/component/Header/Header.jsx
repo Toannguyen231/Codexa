@@ -6,6 +6,8 @@ import { LiaAccessibleIcon } from "react-icons/lia";
 import { LANGUAGE_VERSION, LANGUAGE_DISPLAY_NAME } from './constants';
 import LanguageSelector from './LanguageSelector';
 import EditorSettings from '../EditorSettings/EditorSettings';
+import Avatar from '../Avatar/Avatar.jsx';
+import '../Avatar/Avatar.scss';
 import { FiSettings, FiZap } from 'react-icons/fi';
 
 const Header = ({ onRun, isRunning, language, setLanguage, roomId, isConnected, onlineUsers = [], currentUser = {}, onOpenHistory, editorSettings, setEditorSettings, aiOpen, setAIOpen }) => {
@@ -55,10 +57,6 @@ const Header = ({ onRun, isRunning, language, setLanguage, roomId, isConnected, 
     setProfileOpen(false);
     navigate('/');
   };
-
-  const userInitials = currentUser.username
-    ? currentUser.username.slice(0, 2).toUpperCase()
-    : '??';
 
   return (
     <header className="header">
@@ -169,21 +167,24 @@ const Header = ({ onRun, isRunning, language, setLanguage, roomId, isConnected, 
             className="profile-trigger"
             onClick={() => setProfileOpen(!profileOpen)}
           >
-            <div className="profile-avatar">{userInitials}</div>
+            <Avatar user={currentUser} size="md" />
             <FiChevronDown size={12} />
           </button>
 
           {profileOpen && (
             <div className="profile-menu">
               <div className="profile-menu-header">
-                <div className="profile-avatar-lg">{userInitials}</div>
+                <Avatar user={currentUser} size="lg" />
                 <div className="profile-details">
                   <div className="profile-name">{currentUser.username || 'User'}</div>
                   <div className="profile-email">{currentUser.email || ''}</div>
                 </div>
               </div>
               <div className="profile-menu-divider" />
-              <button className="profile-menu-item" onClick={() => setProfileOpen(false)}>
+              <button
+                className="profile-menu-item"
+                onClick={() => { setProfileOpen(false); navigate('/profile'); }}
+              >
                 <FiUser size={13} /> Profile
               </button>
               <button className="profile-menu-item logout" onClick={handleLogout}>

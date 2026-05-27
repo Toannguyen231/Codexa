@@ -53,19 +53,29 @@
   border-radius: var(--radius-md);
   background: rgba(255,255,255,0.03);
   border: 1px solid var(--border-color);
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+  transition: background 0.15s;
+  &:hover { background: var(--bg-hover); }
 }
 
-.rm-user-avatar {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #10b981, #3b82f6);
+.rm-btn-profile {
   display: flex;
   align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
+  gap: 5px;
+  padding: 7px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  &:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+  }
 }
 
 .rm-user-name { font-size: 13px; font-weight: 500; color: var(--text-primary); }

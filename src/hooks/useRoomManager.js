@@ -22,11 +22,20 @@ export const DEFAULT_CODE = {
  */
 export const useRoomManager = (roomId, token) => {
     // Thông tin người dùng hiện tại
-    const [currentUser] = useState(() => {
+    const [currentUser, setCurrentUser] = useState(() => {
         try {
             return JSON.parse(localStorage.getItem('user')) || {};
         } catch { return {}; }
     });
+
+    useEffect(() => {
+        const syncUser = () => {
+            try { setCurrentUser(JSON.parse(localStorage.getItem('user')) || {}); }
+            catch { setCurrentUser({}); }
+        };
+        window.addEventListener('focus', syncUser);
+        return () => window.removeEventListener('focus', syncUser);
+    }, []);
 
     const [language, setLanguage] = useState('C++');
     const [code, setCode] = useState(DEFAULT_CODE['C++']);

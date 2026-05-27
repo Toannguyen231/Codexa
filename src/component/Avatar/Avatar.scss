@@ -1,0 +1,18 @@
+.avatar-img,
+.avatar-initials {
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.avatar-initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #fff;
+}
+
+.avatar-sm { width: 28px; height: 28px; font-size: 10px; }
+.avatar-md { width: 30px; height: 30px; font-size: 11px; }
+.avatar-lg { width: 38px; height: 38px; font-size: 14px; }

@@ -3,6 +3,7 @@ import './App.css';
 import CodeApp from './CodeApp';
 import Login from './component/Login/Login.jsx';
 import RoomMenu from './component/RoomMenu/RoomMenu.jsx';
+import Profile from './component/Profile/Profile.jsx';
 import { Routes, Route } from 'react-router-dom';
 
 function App() {
@@ -11,6 +12,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/rooms" element={<RoomMenu />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="/room/:id" element={<CodeApp />} />
       </Routes>
     </div>
