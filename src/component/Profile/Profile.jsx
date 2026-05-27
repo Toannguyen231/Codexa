@@ -103,25 +103,27 @@ const Profile = () => {
       {msg && <div className="profile-alert success">{msg}</div>}
       {err && <div className="profile-alert error">{err}</div>}
 
-      <section className="profile-avatar-section">
-        <div className="profile-avatar-wrap">
-          {avatar.type === 'image' ? (
-            <img src={avatar.src} alt="avatar" className="profile-avatar-img" />
-          ) : (
-            <div className="profile-avatar-initials" style={{ background: avatar.color }}>
-              {avatar.initials}
-            </div>
-          )}
-        </div>
-        <input ref={fileRef} type="file" accept="image/*" hidden onChange={handleAvatarChange} />
-        <div className="profile-avatar-actions">
-          <button type="button" onClick={() => fileRef.current?.click()}>Đổi avatar</button>
-          {user.avatar && (
-            <button type="button" className="btn-danger" onClick={handleRemoveAvatar}>Xóa avatar</button>
-          )}
-        </div>
-      </section>
+      <div className="profile-body">
+        <section className="profile-avatar-section">
+          <div className="profile-avatar-wrap">
+            {avatar.type === 'image' ? (
+              <img src={avatar.src} alt="avatar" className="profile-avatar-img" />
+            ) : (
+              <div className="profile-avatar-initials" style={{ background: avatar.color }}>
+                {avatar.initials}
+              </div>
+            )}
+          </div>
+          <input ref={fileRef} type="file" accept="image/*" hidden onChange={handleAvatarChange} />
+          <div className="profile-avatar-actions">
+            <button type="button" onClick={() => fileRef.current?.click()}>Đổi avatar</button>
+            {user.avatar && (
+              <button type="button" className="btn-danger" onClick={handleRemoveAvatar}>Xóa avatar</button>
+            )}
+          </div>
+        </section>
 
+        <div className="profile-main">
       <form className="profile-form" onSubmit={handleSaveProfile}>
         <label htmlFor="username">Username</label>
         <input
@@ -172,6 +174,8 @@ const Profile = () => {
         />
         <button type="submit" disabled={saving}>{saving ? 'Đang xử lý...' : 'Đổi mật khẩu'}</button>
       </form>
+        </div>
+      </div>
     </div>
   );
 };
