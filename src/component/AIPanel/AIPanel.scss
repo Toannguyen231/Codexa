@@ -32,7 +32,35 @@
         font-weight: 600;
         color: var(--text-primary);
         font-size: 14px;
+        flex-wrap: wrap;
         svg { color: #8b5cf6; }
+      }
+
+      .ai-save-badge {
+        font-size: 10px;
+        font-weight: 500;
+        padding: 2px 8px;
+        border-radius: 999px;
+        &.saving { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+        &.saved { background: var(--accent-dim); color: var(--accent); }
+        &.error { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+      }
+
+      .ai-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .btn-clear-history {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 4px 6px;
+        border-radius: 4px;
+        transition: all 0.15s;
+        &:hover { color: #f87171; background: rgba(239, 68, 68, 0.1); }
       }
 
       .btn-close {

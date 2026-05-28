@@ -1,47 +1,177 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Rnd } from 'react-rnd';
-import { FiX, FiCpu, FiMessageSquare, FiZap, FiTool, FiSend } from 'react-icons/fi';
+import { FiX, FiCpu, FiMessageSquare, FiZap, FiTool, FiSend, FiTrash2 } from 'react-icons/fi';
 import './AIPanel.scss';
+
+const getUserId = () => {
+  try {
+    return JSON.parse(localStorage.getItem('user') || '{}').id || 'guest';
+  } catch {
+    return 'guest';
+  }
+};
+
+const getLocalKey = () => `ai-chat-${getUserId()}`;
 
 const AIPanel = ({ code, language, onClose }) => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [userInput, setUserInput] = useState('');
+  const [saveStatus, setSaveStatus] = useState(''); // '', 'saving', 'saved', 'error'
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const messagesRef = useRef([]);
+  const streamMetaRef = useRef(null);
+  const aiTextRef = useRef('');
+  const lastSavedKeyRef = useRef('');
 
   const token = localStorage.getItem('token');
+  const apiUrl = import.meta.env.VITE_API_URL || '/api';
 
-  const streamResponse = async (endpoint, payload) => {
+  messagesRef.current = messages;
+
+  const persistLocal = useCallback((msgs) => {
+    try {
+      const slim = msgs
+        .filter((m) => m.text)
+        .map((m) => ({ role: m.role, text: m.text, isError: !!m.isError }));
+      localStorage.setItem(getLocalKey(), JSON.stringify(slim));
+    } catch {
+      // ignore quota errors
+    }
+  }, []);
+
+  const saveHistory = useCallback(async (type, question, answer, extra = {}) => {
+    if (!token || !question || !answer) return false;
+
+    const dedupeKey = `${type}|${question}|${answer.slice(0, 80)}`;
+    if (lastSavedKeyRef.current === dedupeKey) return true;
+    lastSavedKeyRef.current = dedupeKey;
+
+    setSaveStatus('saving');
+    try {
+      const res = await fetch(`${apiUrl}/ai/history`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          type,
+          question,
+          answer,
+          code: extra.code ?? code,
+          language: extra.language ?? language,
+        }),
+      });
+      if (!res.ok) throw new Error('save failed');
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus(''), 2000);
+      return true;
+    } catch {
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus(''), 3000);
+      return false;
+    }
+  }, [token, apiUrl, code, language]);
+
+  const flushPendingSave = useCallback(() => {
+    const meta = streamMetaRef.current;
+    const answer = aiTextRef.current;
+    if (!meta?.type || !meta?.question || !answer?.trim()) return;
+    saveHistory(meta.type, meta.question, answer, meta.extra);
+    streamMetaRef.current = null;
+    aiTextRef.current = '';
+  }, [saveHistory]);
+
+  const loadHistory = useCallback(async () => {
+    let restored = [];
+
+    if (token) {
+      try {
+        const res = await fetch(`${apiUrl}/ai/history?limit=30`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.items?.length) {
+            data.items.slice().reverse().forEach((h) => {
+              restored.push({ role: 'user', text: h.question });
+              restored.push({ role: 'ai', text: h.answer, isError: h.answer.startsWith('🚨') });
+            });
+          }
+        }
+      } catch {
+        // fallback local
+      }
+    }
+
+    if (!restored.length) {
+      try {
+        const local = JSON.parse(localStorage.getItem(getLocalKey()) || '[]');
+        if (Array.isArray(local) && local.length) restored = local;
+      } catch {
+        // ignore
+      }
+    }
+
+    if (restored.length) setMessages(restored);
+  }, [token, apiUrl]);
+
+  const clearHistory = async () => {
+    if (!window.confirm('Xóa toàn bộ lịch sử trò chuyện AI?')) return;
+    setMessages([]);
+    localStorage.removeItem(getLocalKey());
+    lastSavedKeyRef.current = '';
+    if (token) {
+      try {
+        await fetch(`${apiUrl}/ai/history`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } catch {
+        // local đã xóa
+      }
+    }
+    setSaveStatus('saved');
+    setTimeout(() => setSaveStatus(''), 2000);
+  };
+
+  const streamResponse = async (endpoint, payload, meta) => {
     setLoading(true);
-    setMessages(prev => [...prev, { role: 'ai', text: '', isStreaming: true }]);
+    streamMetaRef.current = { ...meta, extra: { code: payload.code, language: payload.language } };
+    aiTextRef.current = '';
+
+    setMessages((prev) => [...prev, { role: 'ai', text: '', isStreaming: true }]);
+
+    let aiText = '';
+    let errorText = '';
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
       const response = await fetch(`${apiUrl}/ai/${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
         let errMsg = `Lỗi hệ thống: ${response.status}`;
         try {
           const errData = await response.json();
-          errMsg = `Lỗi từ Server: ${errData.message || response.statusText}`;
-        } catch (e) { }
+          errMsg = errData.message || errMsg;
+        } catch {
+          // ignore
+        }
         throw new Error(errMsg);
       }
 
-      if (!response.body) throw new Error("No body returned");
+      if (!response.body) throw new Error('No body returned');
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder('utf-8');
-
-      let aiText = '';
 
       while (true) {
         const { value, done } = await reader.read();
@@ -54,7 +184,7 @@ const AIPanel = ({ code, language, onClose }) => {
           if (line.startsWith('data: ')) {
             const dataStr = line.slice(6).trim();
             if (dataStr === '[DONE]') {
-              setMessages(prev => {
+              setMessages((prev) => {
                 const newMsgs = [...prev];
                 newMsgs[newMsgs.length - 1].isStreaming = false;
                 return newMsgs;
@@ -65,14 +195,14 @@ const AIPanel = ({ code, language, onClose }) => {
               try {
                 const data = JSON.parse(dataStr);
                 aiText += data.text;
-                // Update last message
-                setMessages(prev => {
+                aiTextRef.current = aiText;
+                setMessages((prev) => {
                   const newMsgs = [...prev];
                   newMsgs[newMsgs.length - 1].text = aiText;
                   return newMsgs;
                 });
               } catch (e) {
-                console.error("Error parsing JSON chunk", e);
+                console.error('Error parsing JSON chunk', e);
               }
             }
           }
@@ -80,44 +210,55 @@ const AIPanel = ({ code, language, onClose }) => {
       }
     } catch (err) {
       console.error(err);
-      setMessages(prev => {
+      errorText = `🚨 ${err.message}`;
+      aiTextRef.current = errorText;
+      setMessages((prev) => {
         const newMsgs = [...prev];
-        newMsgs[newMsgs.length - 1].text = `🚨 ${err.message}`;
+        newMsgs[newMsgs.length - 1].text = errorText;
         newMsgs[newMsgs.length - 1].isStreaming = false;
         newMsgs[newMsgs.length - 1].isError = true;
         return newMsgs;
       });
     } finally {
       setLoading(false);
+      const answer = aiText || errorText;
+      if (meta?.type && meta?.question && answer.trim()) {
+        await saveHistory(meta.type, meta.question, answer, {
+          code: payload.code,
+          language: payload.language,
+        });
+      }
+      streamMetaRef.current = null;
+      aiTextRef.current = '';
     }
   };
 
   const handleExplain = () => {
-    setMessages(prev => [...prev, { role: 'user', text: 'Giải thích đoạn code này giúp tôi.' }]);
-    streamResponse('explain', { code, language });
+    const question = 'Giải thích đoạn code này giúp tôi.';
+    setMessages((prev) => [...prev, { role: 'user', text: question }]);
+    streamResponse('explain', { code, language }, { type: 'explain', question });
   };
 
   const handleFixBugs = () => {
-    setMessages(prev => [...prev, { role: 'user', text: 'Tìm và sửa lỗi trong code này.' }]);
-    streamResponse('fix', { code, language });
+    const question = 'Tìm và sửa lỗi trong code này.';
+    setMessages((prev) => [...prev, { role: 'user', text: question }]);
+    streamResponse('fix', { code, language }, { type: 'fix', question });
   };
 
   const handleOptimize = () => {
-    setMessages(prev => [...prev, { role: 'user', text: 'Tối ưu hoá đoạn code này.' }]);
-    streamResponse('optimize', { code, language });
+    const question = 'Tối ưu hoá đoạn code này.';
+    setMessages((prev) => [...prev, { role: 'user', text: question }]);
+    streamResponse('optimize', { code, language }, { type: 'optimize', question });
   };
 
-  // Gửi câu hỏi tự do
   const handleSendMessage = () => {
     const text = userInput.trim();
     if (!text || loading) return;
-
-    setMessages(prev => [...prev, { role: 'user', text }]);
+    setMessages((prev) => [...prev, { role: 'user', text }]);
     setUserInput('');
-    streamResponse('chat', { message: text, code, language });
+    streamResponse('chat', { message: text, code, language }, { type: 'chat', question: text });
   };
 
-  // Gửi khi nhấn Enter (Shift+Enter = xuống dòng)
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -125,14 +266,29 @@ const AIPanel = ({ code, language, onClose }) => {
     }
   };
 
+  const handleClose = () => {
+    flushPendingSave();
+    persistLocal(messagesRef.current);
+    onClose();
+  };
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Auto-focus input khi panel mở
+  // Luôn backup local mỗi khi messages thay đổi
+  useEffect(() => {
+    if (messages.length > 0) persistLocal(messages);
+  }, [messages, persistLocal]);
+
   useEffect(() => {
     inputRef.current?.focus();
-  }, []);
+    if (token) loadHistory();
+    return () => {
+      flushPendingSave();
+      persistLocal(messagesRef.current);
+    };
+  }, [token, loadHistory, flushPendingSave, persistLocal]);
 
   return (
     <Rnd
@@ -140,7 +296,7 @@ const AIPanel = ({ code, language, onClose }) => {
         x: window.innerWidth - 450,
         y: 100,
         width: 400,
-        height: 550
+        height: 550,
       }}
       minWidth={320}
       minHeight={420}
@@ -153,21 +309,31 @@ const AIPanel = ({ code, language, onClose }) => {
           <div className="ai-title">
             <FiCpu size={15} />
             AI Assistant (Gemini)
+            {saveStatus === 'saving' && <span className="ai-save-badge saving">Đang lưu...</span>}
+            {saveStatus === 'saved' && <span className="ai-save-badge saved">Đã lưu</span>}
+            {saveStatus === 'error' && <span className="ai-save-badge error">Lưu local</span>}
           </div>
-          <button className="btn-close" onClick={onClose}><FiX size={15} /></button>
+          <div className="ai-header-actions">
+            {messages.length > 0 && (
+              <button type="button" className="btn-clear-history" onClick={clearHistory} title="Xóa lịch sử">
+                <FiTrash2 size={13} />
+              </button>
+            )}
+            <button type="button" className="btn-close" onClick={handleClose}><FiX size={15} /></button>
+          </div>
         </div>
 
         <div className="ai-suggestions">
-          <button onClick={handleExplain} disabled={loading}><FiMessageSquare /> Explain</button>
-          <button onClick={handleFixBugs} disabled={loading}><FiTool /> Fix Bugs</button>
-          <button onClick={handleOptimize} disabled={loading}><FiZap /> Optimize</button>
+          <button type="button" onClick={handleExplain} disabled={loading}><FiMessageSquare /> Explain</button>
+          <button type="button" onClick={handleFixBugs} disabled={loading}><FiTool /> Fix Bugs</button>
+          <button type="button" onClick={handleOptimize} disabled={loading}><FiZap /> Optimize</button>
         </div>
 
         <div className="ai-chat-history">
           {messages.length === 0 ? (
             <div className="ai-empty">
               <div className="ai-empty-icon">🤖</div>
-              <p>Chọn thao tác bên trên hoặc nhập câu hỏi bên dưới để AI hỗ trợ bạn.</p>
+              <p>Chọn thao tác bên trên hoặc nhập câu hỏi. Lịch sử được lưu tự động.</p>
             </div>
           ) : (
             messages.map((m, idx) => (
@@ -182,7 +348,6 @@ const AIPanel = ({ code, language, onClose }) => {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* ── Ô nhập câu hỏi tự do ── */}
         <div className="ai-input-area">
           <textarea
             ref={inputRef}
@@ -195,16 +360,13 @@ const AIPanel = ({ code, language, onClose }) => {
             rows={1}
           />
           <button
+            type="button"
             className={`ai-send-btn ${userInput.trim() ? 'active' : ''}`}
             onClick={handleSendMessage}
             disabled={loading || !userInput.trim()}
             title="Gửi câu hỏi (Enter)"
           >
-            {loading ? (
-              <span className="ai-send-loading">⏳</span>
-            ) : (
-              <FiSend size={16} />
-            )}
+            {loading ? <span className="ai-send-loading">⏳</span> : <FiSend size={16} />}
           </button>
         </div>
       </div>
