@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import useSocket from './useSocket';
 import { executeCode } from '../component/Header/api';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+
 // Code mẫu mặc định cho từng ngôn ngữ
 export const DEFAULT_CODE = {
     'C++': `#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << "Hello, World!" << endl;\n    return 0;\n}`,
@@ -13,6 +15,33 @@ export const DEFAULT_CODE = {
     'PHP': `<?php\n\necho "Hello, World!\\n";\n\n?>`,
 };
 
+const parseProblemId = (problemId) => {
+    if (!problemId) return null;
+    const [contestId, ...indexParts] = String(problemId).split('-');
+    const index = indexParts.join('-');
+    if (!contestId || !index) return null;
+    return { contestId, index };
+};
+
+const getCommentPrefix = (language) => (language === 'Python' ? '#' : '//');
+
+const createProblemBoilerplate = (problem, language) => {
+    const base = DEFAULT_CODE[language] || '';
+    const commentPrefix = getCommentPrefix(language);
+    const header = [
+        `${commentPrefix} Codeforces ${problem.contestId}${problem.index}: ${problem.name}`,
+        `${commentPrefix} ${problem.url}`,
+        `${commentPrefix} Difficulty: ${problem.difficulty}${problem.rating ? ` (${problem.rating})` : ''}`,
+        problem.tags?.length ? `${commentPrefix} Tags: ${problem.tags.join(', ')}` : '',
+    ].filter(Boolean).join('\n');
+
+    if (language === 'PHP' && base.startsWith('<?php')) {
+        return base.replace('<?php\n\n', `<?php\n${header}\n\n`);
+    }
+
+    return `${header}\n\n${base}`;
+};
+
 /**
  * Custom Hook: useRoomManager
  * Đóng gói toàn bộ logic quản lý trạng thái, đồng bộ Socket, và biên dịch code cho phòng code.
@@ -20,7 +49,7 @@ export const DEFAULT_CODE = {
  * @param {string} roomId - ID phòng code
  * @param {string} token - JWT Token xác thực người dùng
  */
-export const useRoomManager = (roomId, token) => {
+export const useRoomManager = (roomId, token, problemId = '') => {
     // Thông tin người dùng hiện tại
     const [currentUser, setCurrentUser] = useState(() => {
         try {
@@ -51,6 +80,67 @@ export const useRoomManager = (roomId, token) => {
     // Cờ ngăn vòng lặp phản hồi code (remote change vs local change)
     const isRemoteChange = useRef(false);
     const debounceRef = useRef(null);
+    const codeRef = useRef(code);
+    const languageRef = useRef(language);
+    const emptyRoomRef = useRef(false);
+    const problemContextRef = useRef(null);
+    const problemPrefillAppliedRef = useRef(false);
+
+    useEffect(() => { codeRef.current = code; }, [code]);
+    useEffect(() => { languageRef.current = language; }, [language]);
+
+    const applyProblemTemplate = useCallback((problem, targetLanguage = languageRef.current) => {
+        if (!problem || problemPrefillAppliedRef.current) return;
+
+        const currentCode = codeRef.current;
+        const defaultCode = DEFAULT_CODE[targetLanguage] || '';
+        const isDefaultCode = Object.values(DEFAULT_CODE).includes(currentCode);
+        if (currentCode && currentCode !== defaultCode && !isDefaultCode) return;
+
+        const template = createProblemBoilerplate(problem, targetLanguage);
+        problemPrefillAppliedRef.current = true;
+        isRemoteChange.current = true;
+        setCode(template);
+
+        if (socket && isConnected) {
+            socket.emit('code-change', { roomId, code: template });
+        }
+    }, [socket, isConnected, roomId]);
+
+    useEffect(() => {
+        const parsed = parseProblemId(problemId);
+        problemContextRef.current = null;
+        problemPrefillAppliedRef.current = false;
+        if (!parsed) return undefined;
+
+        let cancelled = false;
+
+        const loadProblem = async () => {
+            try {
+                const res = await fetch(`${API_URL}/problems/${parsed.contestId}/${parsed.index}`);
+                const data = await res.json();
+                if (cancelled || !res.ok || !data.problem) return;
+
+                const problem = {
+                    ...data.problem,
+                    url: `https://codeforces.com/contest/${data.problem.contestId}/problem/${data.problem.index}`,
+                };
+                problemContextRef.current = problem;
+
+                if (emptyRoomRef.current) {
+                    applyProblemTemplate(problem);
+                }
+            } catch {
+                problemContextRef.current = null;
+            }
+        };
+
+        loadProblem();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [problemId, applyProblemTemplate]);
 
     // ── Lắng nghe các sự kiện đồng bộ từ Socket Server ────────────────
     useEffect(() => {
@@ -58,11 +148,16 @@ export const useRoomManager = (roomId, token) => {
 
         // Trạng thái ban đầu của phòng khi join thành công
         socket.on('room-state', ({ code: roomCode, language: roomLang, owner, participants }) => {
+            const targetLanguage = roomLang || 'C++';
+            emptyRoomRef.current = !roomCode;
             isRemoteChange.current = true;
             if (roomCode) setCode(roomCode);
             if (roomLang) setLanguage(roomLang);
             if (!roomCode && roomLang) {
                 setCode(DEFAULT_CODE[roomLang] || '');
+            }
+            if (!roomCode && problemContextRef.current) {
+                applyProblemTemplate(problemContextRef.current, targetLanguage);
             }
             if (owner) setRoomOwner(owner);
             if (participants) setRoomParticipants(participants);
@@ -97,7 +192,7 @@ export const useRoomManager = (roomId, token) => {
             socket.off('language-sync');
             socket.off('output-update');
         };
-    }, [socket]);
+    }, [socket, applyProblemTemplate]);
 
     // Emit sự kiện gõ code có debounce 300ms
     const emitCodeChange = useCallback((newCode) => {

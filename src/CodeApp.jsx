@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import './App.css';
 
 import Header from './component/Header/Header';
@@ -18,6 +18,8 @@ import { useRoomManager } from './hooks/useRoomManager';
 function CodeApp() {
     // Lấy roomId từ URL params: /room/:id
     const { id: roomId } = useParams();
+    const [searchParams] = useSearchParams();
+    const problemId = searchParams.get('problem') || '';
 
     // Lấy JWT token từ localStorage
     const [token] = useState(() => localStorage.getItem('token') || '');
@@ -41,7 +43,7 @@ function CodeApp() {
         handleLanguageChange,
         handleRunCode,
         handleRestore,
-    } = useRoomManager(roomId, token);
+    } = useRoomManager(roomId, token, problemId);
 
     // Trạng thái hiển thị Modals/Panels
     const [showHistory, setShowHistory] = useState(false);

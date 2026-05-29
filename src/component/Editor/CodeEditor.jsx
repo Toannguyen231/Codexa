@@ -130,7 +130,7 @@ const CodeEditor = ({ code, setCode, language, socket, roomId, currentUser, sett
       </div>
 
       <div className="monaco-editor-container">
-        <ConnectionStatus status={connectionStatus} />
+        {connectionStatus && <ConnectionStatus status={connectionStatus} />}
         <LazyMonacoEditor
           height="100%"
           language={monacoLanguage}
