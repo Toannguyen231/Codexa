@@ -236,6 +236,9 @@ const RoomMenu = () => {
             <Avatar user={currentUser} size="sm" />
             <span className="rm-user-name">{currentUser.username || 'User'}</span>
           </button>
+          <button className="rm-btn-profile" onClick={() => navigate('/problems')}>
+            <FiCode size={13} /> Problems
+          </button>
           <button className="rm-btn-profile" onClick={() => navigate('/profile')}>
             <FiUser size={13} /> Profile
           </button>
