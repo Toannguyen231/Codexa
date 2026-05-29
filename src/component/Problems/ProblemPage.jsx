@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FiArrowLeft, FiPlay, FiSend, FiExternalLink } from 'react-icons/fi';
+import { FiArrowLeft, FiPlay, FiSend, FiExternalLink, FiLoader, FiRefreshCw } from 'react-icons/fi';
 import CodeEditor from '../Editor/CodeEditor';
 import LanguageSelector from '../Header/LanguageSelector';
 import PresenceBar from '../PresenceBar/PresenceBar';
@@ -45,7 +45,9 @@ const ProblemPage = () => {
   const [language, setLanguage] = useState('C++');
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(true);
+  const [statementLoading, setStatementLoading] = useState(false);
   const [warning, setWarning] = useState('');
+  const statementRef = useRef(null);
 
   const problemUrl = useMemo(() => (problem ? buildProblemUrl(problem) : ''), [problem]);
 
@@ -55,6 +57,7 @@ const ProblemPage = () => {
 
     const loadProblem = async () => {
       setLoading(true);
+      setStatementLoading(true);
       try {
         const res = await fetch(`${API_URL}/problems/${contestId}/${index}`, {
           signal: controller.signal,
@@ -66,12 +69,22 @@ const ProblemPage = () => {
         setProblem(payload.problem);
         setWarning(payload.warning || '');
         setCode(buildStarterCode(payload.problem, language));
+
+        // If we got the statement already, we're done
+        if (payload.problem?.statementHtml) {
+          setStatementLoading(false);
+        } else {
+          setStatementLoading(false);
+        }
       } catch (err) {
         if (!cancelled && err.name !== 'AbortError') {
           setWarning(err.message);
         }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+          setStatementLoading(false);
+        }
       }
     };
 
@@ -82,6 +95,18 @@ const ProblemPage = () => {
       controller.abort();
     };
   }, [contestId, index]);
+
+  // Process MathJax/KaTeX-style formulas after statement renders
+  useEffect(() => {
+    if (problem?.statementHtml && statementRef.current) {
+      // Handle Codeforces-style tex-span elements
+      const texSpans = statementRef.current.querySelectorAll('.tex-span');
+      texSpans.forEach((span) => {
+        // Already styled via CSS, but ensure content is readable
+        span.setAttribute('title', span.textContent);
+      });
+    }
+  }, [problem?.statementHtml]);
 
   const handleLanguageChange = (nextLanguage) => {
     setLanguage(nextLanguage);
@@ -99,8 +124,17 @@ const ProblemPage = () => {
     window.alert('Submit judging sẽ được nối ở phase tiếp theo.');
   };
 
+  const handleRetryLoad = () => {
+    window.location.reload();
+  };
+
   if (loading) {
-    return <div className="problem-page-loading">Đang tải bài...</div>;
+    return (
+      <div className="problem-page-loading">
+        <div className="problem-loading-spinner" />
+        <span>Đang tải bài từ Codeforces...</span>
+      </div>
+    );
   }
 
   if (!problem) {
@@ -127,6 +161,15 @@ const ProblemPage = () => {
             {problem.tags.slice(0, 5).map((tag) => <span key={tag} className="problem-tag-pill">{tag}</span>)}
           </div>
         </div>
+        <a
+          href={problemUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="problem-external-link"
+          title="Mở trên Codeforces"
+        >
+          <FiExternalLink size={14} /> Codeforces
+        </a>
       </header>
 
       <div className="problem-presence-row">
@@ -137,17 +180,24 @@ const ProblemPage = () => {
 
       <div className="problem-workspace">
         <section className="problem-statement">
-          {problem.statementHtml ? (
-            <div 
+          {statementLoading ? (
+            <div className="problem-statement-loading">
+              <div className="problem-loading-spinner" />
+              <span>Đang tải đề bài từ Codeforces...</span>
+              <small>Server đang scrape trang Codeforces. Có thể mất vài giây.</small>
+            </div>
+          ) : problem.statementHtml ? (
+            <div
+              ref={statementRef}
               className="problem-scraped-content"
-              dangerouslySetInnerHTML={{ __html: problem.statementHtml }} 
+              dangerouslySetInnerHTML={{ __html: problem.statementHtml }}
             />
           ) : (
             <div className="problem-external-card">
-              <div className="card-globe-icon">🌐</div>
+              <div className="card-globe-icon">📋</div>
               <h2>Đề bài Codeforces</h2>
               <p className="card-desc">
-                Do chính sách bảo mật của Codeforces (X-Frame-Options), đề bài không thể hiển thị trực tiếp trong khung này. Vui lòng nhấn nút dưới đây để xem chi tiết.
+                Không thể tải đề bài trực tiếp từ Codeforces. Đề bài có thể không khả dụng hoặc server Codeforces đang bị giới hạn.
               </p>
               <div className="problem-meta-box">
                 <div className="meta-row">
@@ -171,14 +221,19 @@ const ProblemPage = () => {
                   </div>
                 </div>
               </div>
-              <a
-                href={problemUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="open-external-btn"
-              >
-                <FiExternalLink size={14} /> Mở đề bài ở tab mới
-              </a>
+              <div className="problem-fallback-actions">
+                <button type="button" className="retry-btn" onClick={handleRetryLoad}>
+                  <FiRefreshCw size={13} /> Thử tải lại
+                </button>
+                <a
+                  href={problemUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="open-external-btn"
+                >
+                  <FiExternalLink size={14} /> Mở đề bài ở tab mới
+                </a>
+              </div>
             </div>
           )}
         </section>

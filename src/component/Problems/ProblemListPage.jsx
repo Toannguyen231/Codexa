@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { FiArrowRight, FiCode, FiSearch, FiUsers } from 'react-icons/fi';
+import { FiArrowRight, FiCode, FiSearch, FiUsers, FiRefreshCw, FiAlertCircle } from 'react-icons/fi';
 import './Problems.scss';
 import {
   API_URL,
@@ -22,6 +22,7 @@ const ProblemListPage = () => {
   const [data, setData] = useState({ items: [], topTags: [], total: 0, totalPages: 1, page: 1 });
   const [loading, setLoading] = useState(true);
   const [warning, setWarning] = useState('');
+  const [error, setError] = useState('');
   const [statuses] = useState(readProblemStatuses);
 
   const difficulty = searchParams.get('difficulty') || 'All';
@@ -52,41 +53,44 @@ const ProblemListPage = () => {
     updateQuery({ tags: nextTags.join(',') });
   };
 
-  useEffect(() => {
-    let cancelled = false;
-    const controller = new AbortController();
+  const fetchProblems = useCallback(async (signal) => {
+    setLoading(true);
+    setError('');
+    try {
+      const params = new URLSearchParams(searchParams);
+      params.set('limit', '20');
+      const res = await fetch(`${API_URL}/problems?${params.toString()}`, {
+        signal,
+      });
 
-    const loadProblems = async () => {
-      setLoading(true);
-      try {
-        const params = new URLSearchParams(searchParams);
-        params.set('limit', '20');
-        const res = await fetch(`${API_URL}/problems?${params.toString()}`, {
-          signal: controller.signal,
-        });
-        const payload = await res.json();
-        if (cancelled) return;
-
-        if (!res.ok) throw new Error(payload.message || 'Không thể tải danh sách bài.');
-        setData(payload);
-        setWarning(payload.warning || '');
-      } catch (err) {
-        if (!cancelled && err.name !== 'AbortError') {
-          setWarning(err.message);
-          setData((prev) => ({ ...prev, items: [] }));
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
+      if (!res.ok) {
+        const payload = await res.json().catch(() => ({}));
+        throw new Error(payload.message || `Server trả về lỗi ${res.status}`);
       }
-    };
 
-    loadProblems();
-
-    return () => {
-      cancelled = true;
-      controller.abort();
-    };
+      const payload = await res.json();
+      setData(payload);
+      setWarning(payload.warning || '');
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        console.error('[ProblemList] Fetch error:', err);
+        setError(err.message || 'Không thể kết nối tới server.');
+        setData((prev) => ({ ...prev, items: [] }));
+      }
+    } finally {
+      setLoading(false);
+    }
   }, [searchParams]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchProblems(controller.signal);
+    return () => controller.abort();
+  }, [fetchProblems]);
+
+  const handleRetry = () => {
+    fetchProblems(new AbortController().signal);
+  };
 
   const openProblemRoom = (problem) => {
     navigate(getProblemRoomPath(problem));
@@ -161,12 +165,31 @@ const ProblemListPage = () => {
             <h1>Algorithm Problems</h1>
             <p>{data.total || 0} bài Codeforces phù hợp</p>
           </div>
-          <button type="button" onClick={() => navigate('/rooms')} className="problems-back-btn">
-            Về danh sách phòng
-          </button>
+          <div className="problems-header-actions">
+            <button type="button" onClick={handleRetry} className="problems-refresh-btn" title="Tải lại">
+              <FiRefreshCw size={13} /> Refresh
+            </button>
+            <button type="button" onClick={() => navigate('/rooms')} className="problems-back-btn">
+              Về danh sách phòng
+            </button>
+          </div>
         </header>
 
         {warning && <div className="problems-warning">{warning}</div>}
+
+        {error && (
+          <div className="problems-error">
+            <FiAlertCircle size={16} />
+            <div className="problems-error-content">
+              <strong>Lỗi tải danh sách bài</strong>
+              <p>{error}</p>
+              <small>Kiểm tra xem server backend có đang chạy tại {API_URL} không.</small>
+            </div>
+            <button type="button" onClick={handleRetry} className="problems-retry-btn">
+              <FiRefreshCw size={13} /> Thử lại
+            </button>
+          </div>
+        )}
 
         <div className="problem-table-wrap">
           <table className="problem-table">
@@ -182,8 +205,15 @@ const ProblemListPage = () => {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan="6" className="problem-empty">Đang tải bài...</td></tr>
-              ) : data.items.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="problem-empty">
+                    <div className="problem-table-loading">
+                      <div className="problem-loading-spinner" />
+                      <span>Đang tải danh sách bài từ Codeforces...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : data.items.length === 0 && !error ? (
                 <tr><td colSpan="6" className="problem-empty">Không có bài phù hợp.</td></tr>
               ) : data.items.map((problem) => (
                 <tr key={problem.id}>

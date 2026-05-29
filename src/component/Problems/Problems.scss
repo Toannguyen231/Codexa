@@ -260,6 +260,33 @@
   }
 }
 
+.problems-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.problems-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: rgba(16, 185, 129, 0.06);
+  border: 1px solid rgba(16, 185, 129, 0.15);
+  border-radius: var(--radius-md);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    background: rgba(16, 185, 129, 0.12);
+    border-color: rgba(16, 185, 129, 0.3);
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
+  }
+}
+
 .problems-back-btn, .problem-back-btn {
   display: inline-flex;
   align-items: center;
@@ -289,6 +316,80 @@
   color: #f59e0b;
   font-size: 13px;
   margin-bottom: 20px;
+}
+
+/* ── Error State ── */
+.problems-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 18px 20px;
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: var(--radius-lg);
+  margin-bottom: 20px;
+  animation: errorSlideIn 0.3s ease-out;
+
+  > svg {
+    color: #ef4444;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .problems-error-content {
+    flex: 1;
+
+    strong {
+      color: #ef4444;
+      font-size: 14px;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    p {
+      color: var(--text-secondary);
+      font-size: 13px;
+      margin: 0 0 4px 0;
+    }
+
+    small {
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+  }
+
+  .problems-retry-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: var(--radius-md);
+    color: #ef4444;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+    flex-shrink: 0;
+
+    &:hover {
+      background: rgba(239, 68, 68, 0.18);
+      border-color: rgba(239, 68, 68, 0.35);
+    }
+  }
+}
+
+@keyframes errorSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .problem-table-wrap {
@@ -339,6 +440,33 @@
   color: var(--text-muted);
   padding: 60px 0 !important;
   font-size: 14px;
+}
+
+.problem-table-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 0;
+
+  span {
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+}
+
+/* ── Loading Spinner ── */
+.problem-loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(16, 185, 129, 0.12);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spinProblem 0.8s linear infinite;
+}
+
+@keyframes spinProblem {
+  to { transform: rotate(360deg); }
 }
 
 /* ── Badges & Tags ── */
@@ -527,6 +655,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  flex: 1;
 
   h1 {
     font-size: 18px;
@@ -550,6 +679,28 @@
   border-radius: 4px;
 }
 
+.problem-external-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: rgba(59, 130, 246, 0.06);
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  border-radius: var(--radius-md);
+  color: var(--accent-blue);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+
+  &:hover {
+    background: rgba(59, 130, 246, 0.12);
+    border-color: rgba(59, 130, 246, 0.3);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.12);
+  }
+}
+
 .problem-presence-row {
   background: rgba(255, 255, 255, 0.01);
   border-bottom: 1px solid var(--border-color);
@@ -563,6 +714,7 @@
   min-height: 0; /* Prevents viewport overflow/clipping of bottom inputs */
 }
 
+/* ── Scraped Content Renderer ── */
 .problem-scraped-content {
   width: 100%;
   height: 100%;
@@ -571,7 +723,7 @@
   background: var(--bg-secondary);
   color: var(--text-secondary);
   font-size: 13.5px;
-  line-height: 1.6;
+  line-height: 1.7;
 
   /* Custom scrollbar for problem text */
   &::-webkit-scrollbar {
@@ -595,6 +747,7 @@
     font-family: inherit !important;
     font-size: inherit !important;
     width: 100%;
+    max-width: 800px;
     height: auto;
     display: block;
 
@@ -608,14 +761,14 @@
         font-size: 22px;
         font-weight: 700;
         color: var(--text-primary);
-        margin-bottom: 8px;
+        margin-bottom: 10px;
       }
-      
+
       .time-limit, .memory-limit, .input-file, .output-file {
         font-size: 12px;
         color: var(--text-muted);
         margin-bottom: 4px;
-        
+
         .property-title {
           font-weight: 600;
           color: var(--text-secondary);
@@ -627,8 +780,8 @@
       font-size: 15px;
       font-weight: 600;
       color: var(--text-primary);
-      margin-top: 24px;
-      margin-bottom: 12px;
+      margin-top: 28px;
+      margin-bottom: 14px;
       border-bottom: 1px solid var(--border-subtle);
       padding-bottom: 6px;
       text-transform: uppercase;
@@ -637,6 +790,7 @@
 
     p {
       margin-bottom: 16px;
+      line-height: 1.75;
     }
 
     ul, ol {
@@ -644,17 +798,29 @@
       margin-bottom: 16px;
       li {
         margin-bottom: 6px;
+        line-height: 1.6;
       }
     }
 
-    /* Inline formulas and elements */
+    /* Inline formulas and math elements */
     span.tex-span, span.tex-font-style-it {
-      font-family: "JetBrains Mono", monospace;
+      font-family: "JetBrains Mono", "Consolas", monospace;
       color: var(--accent-purple);
       background: rgba(139, 92, 246, 0.08);
-      padding: 1px 4px;
+      padding: 1px 5px;
       border-radius: 4px;
       font-size: 12.5px;
+    }
+
+    span.tex-font-style-bf {
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    /* Subscript / superscript in formulas */
+    sub, sup {
+      font-size: 0.75em;
+      color: var(--accent-purple);
     }
 
     /* Blockquotes/Notes */
@@ -665,18 +831,26 @@
       border-radius: 0 var(--radius-md) var(--radius-md) 0 !important;
       margin-top: 20px !important;
       color: var(--text-secondary);
+
+      .section-title {
+        margin-top: 0;
+        font-size: 13px;
+        border-bottom: none;
+        padding-bottom: 0;
+        margin-bottom: 10px;
+      }
     }
 
     /* Samples table styling */
     .sample-tests {
       margin-top: 20px;
-      
+
       .sample-test {
         display: flex;
         flex-direction: column;
         gap: 16px;
         margin-bottom: 16px;
-        
+
         .input, .output {
           border: 1px solid var(--border-color);
           border-radius: var(--radius-md);
@@ -702,24 +876,118 @@
             color: var(--text-primary);
             white-space: pre-wrap;
             word-break: break-all;
+            background: rgba(0, 0, 0, 0.15);
           }
         }
       }
     }
+
+    /* Table elements from Codeforces */
+    table {
+      border-collapse: collapse;
+      margin: 16px 0;
+      width: 100%;
+
+      td, th {
+        border: 1px solid var(--border-color);
+        padding: 8px 12px;
+        font-size: 13px;
+        color: var(--text-secondary);
+      }
+
+      th {
+        background: rgba(255, 255, 255, 0.02);
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+    }
+
+    /* Image from Codeforces */
+    img {
+      max-width: 100%;
+      height: auto;
+      border-radius: var(--radius-md);
+      margin: 12px 0;
+    }
+
+    /* Inline code / tt tags */
+    tt, code {
+      font-family: "JetBrains Mono", "Consolas", monospace;
+      font-size: 12.5px;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 1px 5px;
+      border-radius: 3px;
+      color: #e879f9;
+    }
+
+    /* pre blocks */
+    pre {
+      font-family: "JetBrains Mono", "Consolas", monospace;
+      font-size: 12.5px;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 14px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+      overflow-x: auto;
+      color: var(--text-primary);
+      margin: 12px 0;
+    }
+
+    /* Override CF center alignment */
+    center {
+      text-align: left;
+    }
   }
 }
 
+/* ── Problem Statement Panel ── */
 .problem-statement {
   flex: 1;
   border-right: 1px solid var(--border-color);
   background: var(--bg-secondary) !important;
   height: 100%;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 32px;
+  align-items: stretch;
+  justify-content: stretch;
+  position: relative;
+  overflow: hidden;
 }
 
+/* When showing the scraped content, let it fill the panel */
+.problem-statement .problem-scraped-content {
+  position: absolute;
+  inset: 0;
+}
+
+/* When showing the fallback card, center it */
+.problem-statement .problem-external-card,
+.problem-statement .problem-statement-loading {
+  margin: auto;
+}
+
+/* ── Statement Loading State ── */
+.problem-statement-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 40px;
+  text-align: center;
+
+  span {
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  small {
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+}
+
+/* ── Fallback Card ── */
 .problem-external-card {
   max-width: 480px;
   width: 100%;
@@ -805,6 +1073,36 @@
       padding: 1px 6px;
       font-size: 11px;
       border-radius: 4px;
+    }
+  }
+
+  .problem-fallback-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .retry-btn {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+
+    &:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+      border-color: rgba(255, 255, 255, 0.15);
     }
   }
 
