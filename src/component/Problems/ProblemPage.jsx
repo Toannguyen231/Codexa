@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FiArrowLeft, FiPlay, FiSend } from 'react-icons/fi';
+import { FiArrowLeft, FiPlay, FiSend, FiExternalLink } from 'react-icons/fi';
 import CodeEditor from '../Editor/CodeEditor';
 import LanguageSelector from '../Header/LanguageSelector';
 import PresenceBar from '../PresenceBar/PresenceBar';
@@ -137,11 +137,43 @@ const ProblemPage = () => {
 
       <div className="problem-workspace">
         <section className="problem-statement">
-          <iframe
-            src={problemUrl}
-            title={`${problem.name} statement`}
-            loading="lazy"
-          />
+          <div className="problem-external-card">
+            <div className="card-globe-icon">🌐</div>
+            <h2>Đề bài Codeforces</h2>
+            <p className="card-desc">
+              Do chính sách bảo mật của Codeforces (X-Frame-Options), đề bài không thể hiển thị trực tiếp trong khung này. Vui lòng nhấn nút dưới đây để xem chi tiết.
+            </p>
+            <div className="problem-meta-box">
+              <div className="meta-row">
+                <span className="meta-label">Bài tập:</span>
+                <span className="meta-val">{problem.contestId}{problem.index} - {problem.name}</span>
+              </div>
+              <div className="meta-row">
+                <span className="meta-label">Độ khó:</span>
+                <span className={`difficulty-badge ${getDifficultyClass(problem.difficulty)}`}>
+                  {problem.difficulty} {problem.rating ? `(${problem.rating})` : ''}
+                </span>
+              </div>
+              <div className="meta-row">
+                <span className="meta-label">Đã giải:</span>
+                <span className="meta-val">{problem.solvedCount.toLocaleString()} người</span>
+              </div>
+              <div className="meta-row">
+                <span className="meta-label">Tags:</span>
+                <div className="meta-tags">
+                  {problem.tags.map((tag) => <span key={tag} className="tag-badge">{tag}</span>)}
+                </div>
+              </div>
+            </div>
+            <a
+              href={problemUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="open-external-btn"
+            >
+              <FiExternalLink size={14} /> Mở đề bài ở tab mới
+            </a>
+          </div>
         </section>
 
         <section className="problem-editor-panel">
