@@ -1,0 +1,41 @@
+.monaco-skeleton {
+  width: 100%;
+  height: 100%;
+  padding: 18px 20px;
+  background: var(--bg-editor);
+  overflow: hidden;
+}
+
+.monaco-skeleton-toolbar {
+  width: 140px;
+  height: 12px;
+  border-radius: var(--radius-full);
+  background: var(--bg-hover);
+  margin-bottom: 20px;
+  animation: monaco-skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.monaco-skeleton-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.monaco-skeleton-lines span {
+  display: block;
+  height: 10px;
+  border-radius: var(--radius-full);
+  background: var(--bg-hover);
+  animation: monaco-skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes monaco-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+
+  50% {
+    opacity: 0.85;
+  }
+}

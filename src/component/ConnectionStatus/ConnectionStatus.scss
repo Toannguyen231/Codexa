@@ -1,0 +1,77 @@
+.connection-status {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  background: var(--bg-glass);
+  color: var(--text-secondary);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(12px);
+  font-size: 11px;
+  font-weight: 600;
+  transition: opacity var(--transition-base), transform var(--transition-base);
+  pointer-events: auto;
+}
+
+.connection-status:hover {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.connection-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.connection-status-connected {
+  animation: connection-status-fade 3s ease forwards;
+}
+
+.connection-status-connected .connection-status-dot {
+  background: var(--accent);
+  box-shadow: var(--shadow-glow-green);
+}
+
+.connection-status-connecting .connection-status-dot {
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--user-3);
+  border-top-color: transparent;
+  background: transparent;
+  animation: connection-status-spin 0.8s linear infinite;
+}
+
+.connection-status-disconnected .connection-status-dot,
+.connection-status-error .connection-status-dot {
+  background: var(--user-4);
+}
+
+.connection-status-error {
+  color: var(--user-4);
+}
+
+@keyframes connection-status-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes connection-status-fade {
+  0%,
+  80% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.12;
+  }
+}

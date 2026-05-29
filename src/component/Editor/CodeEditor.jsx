@@ -1,13 +1,14 @@
 import React, { useRef, useEffect } from 'react';
-import Editor from '@monaco-editor/react';
 import './CodeEditor.scss';
 import { FiRotateCcw, FiCopy } from 'react-icons/fi';
+import ConnectionStatus from '../ConnectionStatus/ConnectionStatus';
+import LazyMonacoEditor from './LazyMonacoEditor';
 
 const DEFAULT_CODE = {
-  'C++': `#include <iostream>\nusing namespace std;\n\nint main() {\n  cout << \"Hello, World!\" << endl;\n  return 0;\n}`,
-  Python: `def main():\n  print(\"Hello, World!\")\n\nif __name__ == \"__main__\":\n  main()`,
-  Java: `public class Main {\n  public static void main(String[] args) {\n    System.out.println(\"Hello, World!\");\n  }\n}`,
-  JavaScript: `function main() {\n  console.log(\"Hello, World!\");\n}\n\nmain();`,
+  'C++': `#include <iostream>\nusing namespace std;\n\nint main() {\n  cout << "Hello, World!" << endl;\n  return 0;\n}`,
+  Python: `def main():\n  print("Hello, World!")\n\nif __name__ == "__main__":\n  main()`,
+  Java: `public class Main {\n  public static void main(String[] args) {\n    System.out.println("Hello, World!");\n  }\n}`,
+  JavaScript: `function main() {\n  console.log("Hello, World!");\n}\n\nmain();`,
 };
 
 const languageMap = {
@@ -20,7 +21,7 @@ const languageMap = {
   PHP: 'php',
 };
 
-const CodeEditor = ({ code, setCode, language, socket, roomId, currentUser, settings }) => {
+const CodeEditor = ({ code, setCode, language, socket, roomId, currentUser, settings, connectionStatus }) => {
   const monacoLanguage = languageMap[language] || 'plaintext';
   
   const editorRef = useRef(null);
@@ -129,7 +130,8 @@ const CodeEditor = ({ code, setCode, language, socket, roomId, currentUser, sett
       </div>
 
       <div className="monaco-editor-container">
-        <Editor
+        <ConnectionStatus status={connectionStatus} />
+        <LazyMonacoEditor
           height="100%"
           language={monacoLanguage}
           theme={settings?.theme || 'vs-dark'}

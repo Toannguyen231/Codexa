@@ -46,7 +46,7 @@ export const useRoomManager = (roomId, token) => {
     const [roomParticipants, setRoomParticipants] = useState([]);
 
     // Kết nối Socket.io
-    const { socket, onlineUsers, isConnected } = useSocket(roomId, token);
+    const { socket, onlineUsers, isConnected, connectionStatus } = useSocket(roomId, token);
 
     // Cờ ngăn vòng lặp phản hồi code (remote change vs local change)
     const isRemoteChange = useRef(false);
@@ -196,6 +196,7 @@ export const useRoomManager = (roomId, token) => {
         socket,
         onlineUsers,
         isConnected,
+        connectionStatus,
         handleCodeChange,
         handleLanguageChange,
         handleRunCode,

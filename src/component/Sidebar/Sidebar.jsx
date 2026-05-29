@@ -6,9 +6,9 @@ import { FaCrown } from 'react-icons/fa6';
 const AVATAR_COLORS = ['#4caf50', '#2196f3', '#ff9800', '#e91e63', '#9c27b0', '#00bcd4'];
 const getInitials = (name) => name ? name.slice(0, 2).toUpperCase() : '??';
 
-const getJoinTimeAgo = (joinedAt) => {
+const getJoinTimeAgo = (joinedAt, now) => {
   if (!joinedAt) return '';
-  const diff = Math.floor((Date.now() - joinedAt) / 1000);
+  const diff = now ? Math.floor((now - joinedAt) / 1000) : 0;
   if (diff < 60) return 'just now';
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
@@ -26,14 +26,18 @@ const Sidebar = ({ onlineUsers = [], currentUser = {}, roomId, socket, isConnect
   const [messages, setMessages] = useState([]);
   const [inputMsg, setInputMsg] = useState('');
   const [unreadCount, setUnreadCount] = useState(0);
-  const [now, setNow] = useState(Date.now());
+  const [now, setNow] = useState(0);
   const chatBottomRef = useRef(null);
   const inputRef = useRef(null);
 
   // Cập nhật time mỗi 30s
   useEffect(() => {
+    const initial = setTimeout(() => setNow(Date.now()), 0);
     const t = setInterval(() => setNow(Date.now()), 30000);
-    return () => clearInterval(t);
+    return () => {
+      clearTimeout(initial);
+      clearInterval(t);
+    };
   }, []);
 
   // Lắng nghe tin nhắn từ socket
@@ -151,7 +155,7 @@ const Sidebar = ({ onlineUsers = [], currentUser = {}, roomId, socket, isConnect
                     <span className="user-status-text online-text">
                       ● {isOwner ? 'Owner' : 'Online'}
                     </span>
-                    <span className="join-time">{getJoinTimeAgo(user.joinedAt)}</span>
+                    <span className="join-time">{getJoinTimeAgo(user.joinedAt, now)}</span>
                   </div>
                 </div>
               </div>

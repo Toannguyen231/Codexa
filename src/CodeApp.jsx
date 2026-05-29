@@ -36,6 +36,7 @@ function CodeApp() {
         socket,
         onlineUsers,
         isConnected,
+        connectionStatus,
         handleCodeChange,
         handleLanguageChange,
         handleRunCode,
@@ -109,6 +110,7 @@ function CodeApp() {
                         roomId={roomId}
                         currentUser={currentUser}
                         settings={editorSettings}
+                        connectionStatus={connectionStatus}
                     />
 
                     {/* ── Bảng hiển thị kết quả Console ── */}

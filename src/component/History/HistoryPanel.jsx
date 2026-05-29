@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FiClock, FiX, FiRotateCcw, FiSave } from 'react-icons/fi';
 import './HistoryPanel.scss';
 
@@ -10,14 +10,14 @@ const formatTime = (ts) => {
     });
 };
 
-const HistoryPanel = ({ roomId, token, onRestore, onClose, socket, isConnected, currentCode, currentLanguage, currentUser }) => {
+const HistoryPanel = ({ roomId, token, onRestore, onClose, socket, isConnected, currentCode, currentLanguage }) => {
     const [history, setHistory] = useState([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [selected, setSelected] = useState(null); // index của snapshot đang xem preview
 
     // Load lịch sử từ API
-    const fetchHistory = async () => {
+    const fetchHistory = useCallback(async () => {
         setLoading(true);
         try {
             const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
@@ -31,9 +31,9 @@ const HistoryPanel = ({ roomId, token, onRestore, onClose, socket, isConnected, 
         } finally {
             setLoading(false);
         }
-    };
+    }, [roomId, token]);
 
-    useEffect(() => { fetchHistory(); }, [roomId]);
+    useEffect(() => { fetchHistory(); }, [fetchHistory]);
 
     // Lắng nghe snapshot mới từ socket (người khác save)
     useEffect(() => {
