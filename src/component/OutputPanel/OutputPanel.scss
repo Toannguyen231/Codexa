@@ -119,3 +119,58 @@
 }
 
 .status-time { font-size: 11px; color: var(--text-dim); margin-left: auto; }
+
+/* ── Automated Test Cases (Output Panel) ── */
+.testcase-area-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.custom-stdin-section, .testcases-list-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.custom-stdin-section {
+  flex-shrink: 0;
+}
+
+.testcases-list-section {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.stdin-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  font-family: 'Inter', sans-serif;
+}
+
+.run-tests-btn-sm {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #10b981;
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  font-weight: 600;
+  
+  &:hover:not(:disabled) {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: #10b981;
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}

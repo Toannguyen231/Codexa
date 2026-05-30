@@ -6,7 +6,7 @@ const MIN_HEIGHT = 120;
 const MAX_HEIGHT = 500;
 const DEFAULT_HEIGHT = 220;
 
-const OutputPanel = ({ output, isRunning, onClear, stdin, setStdin }) => {
+const OutputPanel = ({ output, isRunning, onClear, stdin, setStdin, samples = [], testResults = null, runningTests = false, onRunAllTests }) => {
   const [activeTab, setActiveTab] = useState('console');
   const [height, setHeight] = useState(DEFAULT_HEIGHT);
   const dragRef = useRef(null);
@@ -79,6 +79,16 @@ const OutputPanel = ({ output, isRunning, onClear, stdin, setStdin }) => {
         </div>
 
         <div className="output-tab-actions">
+          {activeTab === 'testcase' && (
+            <button 
+              className="run-tests-btn-sm" 
+              onClick={onRunAllTests} 
+              disabled={runningTests || samples.length === 0}
+              title="Chạy tất cả testcases mẫu"
+            >
+              {runningTests ? 'Đang chạy...' : 'Run All Tests'}
+            </button>
+          )}
           <button className="btn-clear" title="Clear output" onClick={handleClearCode}>
             <FiTrash2 size={11} style={{ marginRight: 4 }} />
             Clear
@@ -110,20 +120,59 @@ const OutputPanel = ({ output, isRunning, onClear, stdin, setStdin }) => {
             <span className="console-empty">Nhấn "Run Code" để chạy chương trình...</span>
           )
         ) : (
-          <div className="testcase-area" style={{ height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
-            <label style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' }}>Input (stdin)</label>
-            <textarea 
-              value={stdin}
-              onChange={(e) => setStdin(e.target.value)}
-              className="stdin-textarea"
-              placeholder="Nhập input cho chương trình ở đây..."
-              style={{
-                flex: 1, backgroundColor: '#1e1e1e', color: '#d4d4d4', 
-                border: '1px solid #333', borderRadius: '4px', padding: '8px',
-                fontFamily: 'Consolas, monospace', fontSize: '13px', resize: 'none',
-                outline: 'none'
-              }}
-            />
+          <div className="testcase-area-container">
+            {/* Test Results List */}
+            <div className="testcases-list-section">
+              {samples.length === 0 ? (
+                <div className="console-empty">
+                  Không tìm thấy sample test cases trong đề bài.
+                </div>
+              ) : (
+                <div className="test-results-list" style={{ marginTop: '8px' }}>
+                  <div className="test-summary-bar">
+                    <span className="test-summary-count">{samples.length} test case{samples.length > 1 ? 's' : ''}</span>
+                    {testResults && (
+                      <span className="test-summary-result">
+                        <span className="passed-count">✓ {testResults.filter(t => t.status === 'Passed').length}</span>
+                        <span className="failed-count">✗ {testResults.filter(t => t.status !== 'Passed' && t.status !== 'Pending' && t.status !== 'Running').length}</span>
+                      </span>
+                    )}
+                  </div>
+                  {samples.map((sample, i) => {
+                    const result = testResults?.[i];
+                    const statusClass = result ? result.status.toLowerCase().replace(' ', '-') : 'pending';
+                    return (
+                      <div key={i} className={`test-case-card ${statusClass}`}>
+                        <div className="test-case-header">
+                          <span className="test-case-title">Sample {i + 1}</span>
+                          {result && <span className="test-case-status">{result.status}</span>}
+                        </div>
+                        <div className="test-case-body">
+                          <div className="test-case-io">
+                            <div className="io-col">
+                              <strong>Input</strong>
+                              <pre>{sample.input}</pre>
+                            </div>
+                            <div className="io-col">
+                              <strong>Expected Output</strong>
+                              <pre>{sample.output}</pre>
+                            </div>
+                            {result && (
+                              <div className="io-col">
+                                <strong>Actual Output</strong>
+                                <pre className={result.status === 'Failed' || result.status === 'Runtime Error' || result.status === 'Compile Error' ? 'error-text' : result.status === 'Passed' ? 'passed-text' : ''}>
+                                  {result.actualOutput !== null ? result.actualOutput : (result.status === 'Running' ? '⏳ Đang chạy...' : '—')}
+                                </pre>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

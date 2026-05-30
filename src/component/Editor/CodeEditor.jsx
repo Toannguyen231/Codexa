@@ -21,7 +21,7 @@ const languageMap = {
   PHP: 'php',
 };
 
-const CodeEditor = ({ code, setCode, language, socket, roomId, currentUser, settings, connectionStatus }) => {
+const CodeEditor = ({ code, setCode, language, socket, roomId, currentUser, settings, connectionStatus, hideToolbar = false }) => {
   const monacoLanguage = languageMap[language] || 'plaintext';
   
   const editorRef = useRef(null);
@@ -114,20 +114,22 @@ const CodeEditor = ({ code, setCode, language, socket, roomId, currentUser, sett
 
   return (
     <div className="editor-wrapper">
-      <div className="editor-toolbar">
-        <div className="editor-toolbar-left">
-          <span className="toolbar-label">📝 {language}</span>
-          <span className="toolbar-divider" />
+      {!hideToolbar && (
+        <div className="editor-toolbar">
+          <div className="editor-toolbar-left">
+            <span className="toolbar-label">📝 {language}</span>
+            <span className="toolbar-divider" />
+          </div>
+          <div className="editor-toolbar-right">
+            <button className="toolbar-action-btn" onClick={handleCopy}>
+              <FiCopy size={13} /> Copy
+            </button>
+            <button className="toolbar-action-btn" onClick={handleReset}>
+              <FiRotateCcw size={13} /> Reset
+            </button>
+          </div>
         </div>
-        <div className="editor-toolbar-right">
-          <button className="toolbar-action-btn" onClick={handleCopy}>
-            <FiCopy size={13} /> Copy
-          </button>
-          <button className="toolbar-action-btn" onClick={handleReset}>
-            <FiRotateCcw size={13} /> Reset
-          </button>
-        </div>
-      </div>
+      )}
 
       <div className="monaco-editor-container">
         {connectionStatus && <ConnectionStatus status={connectionStatus} />}

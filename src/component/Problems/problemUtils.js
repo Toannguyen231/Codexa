@@ -47,3 +47,30 @@ export const getStatusIcon = (status) => {
 export const buildProblemUrl = (problem) => (
   `https://codeforces.com/contest/${problem.contestId}/problem/${problem.index}`
 );
+
+export const extractSamples = (html) => {
+  if (!html) return [];
+  const samples = [];
+  const inputBlocks = [];
+  const outputBlocks = [];
+
+  const inputMatch = html.matchAll(/<div class="input">[\s\S]*?<pre[^>]*>([\s\S]*?)<\/pre>/gi);
+  for (const m of inputMatch) {
+    inputBlocks.push(m[1].replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').trim());
+  }
+
+  const outputMatch = html.matchAll(/<div class="output">[\s\S]*?<pre[^>]*>([\s\S]*?)<\/pre>/gi);
+  for (const m of outputMatch) {
+    outputBlocks.push(m[1].replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').trim());
+  }
+
+  for (let i = 0; i < Math.max(inputBlocks.length, outputBlocks.length); i++) {
+    samples.push({
+      input: inputBlocks[i] || '',
+      output: outputBlocks[i] || '',
+    });
+  }
+
+  return samples;
+};
+

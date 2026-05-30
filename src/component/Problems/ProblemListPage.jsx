@@ -200,7 +200,7 @@ const ProblemListPage = () => {
                 <th>Difficulty</th>
                 <th>Tags</th>
                 <th>Solved</th>
-                <th>Room</th>
+                <th style={{ textAlign: 'center' }}>Hành động</th>
               </tr>
             </thead>
             <tbody>
@@ -245,13 +245,22 @@ const ProblemListPage = () => {
                   </td>
                   <td>{formatSolvedCount(problem.solvedCount)}</td>
                   <td>
-                    <button
-                      type="button"
-                      className="open-room-btn"
-                      onClick={() => openProblemRoom(problem)}
-                    >
-                      <FiCode size={13} /> Open
-                    </button>
+                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                      <button
+                        type="button"
+                        className="solve-solo-btn"
+                        onClick={() => navigate(`/problems/${problem.contestId}/${problem.index}`)}
+                      >
+                        <FiCode size={12} /> Cá nhân
+                      </button>
+                      <button
+                        type="button"
+                        className="solve-team-btn"
+                        onClick={() => openProblemRoom(problem)}
+                      >
+                        <FiUsers size={12} /> Giải nhóm
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

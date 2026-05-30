@@ -12,6 +12,7 @@ import {
   FiCopy,
   FiChevronDown,
   FiChevronUp,
+  FiUsers,
 } from 'react-icons/fi';
 import CodeEditor from '../Editor/CodeEditor';
 import LanguageSelector from '../Header/LanguageSelector';
@@ -101,11 +102,46 @@ const ProblemPage = () => {
 
   // Samples extracted from the scraped HTML
   const [samples, setSamples] = useState([]);
+  const [testResults, setTestResults] = useState(null);
 
   const statementRef = useRef(null);
+  const workspaceRef = useRef(null);
   const token = localStorage.getItem('token') || '';
 
   const problemUrl = useMemo(() => (problem ? buildProblemUrl(problem) : ''), [problem]);
+
+  // ── Resizer Logic ──────────────────────────────────────────────────
+  const [leftWidth, setLeftWidth] = useState(50);
+
+  const handleMouseDown = useCallback((e) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startWidth = leftWidth;
+
+    const onMouseMove = (moveEvent) => {
+      if (!workspaceRef.current) return;
+      const containerWidth = workspaceRef.current.offsetWidth;
+      const deltaX = moveEvent.clientX - startX;
+      const deltaPercentage = (deltaX / containerWidth) * 100;
+      let newWidth = startWidth + deltaPercentage;
+
+      // Giới hạn chiều rộng từ 20% đến 80%
+      if (newWidth < 20) newWidth = 20;
+      if (newWidth > 80) newWidth = 80;
+
+      setLeftWidth(newWidth);
+    };
+
+    const onMouseUp = () => {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+      document.body.style.cursor = 'default';
+    };
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+    document.body.style.cursor = 'col-resize';
+  }, [leftWidth]);
 
   // ── Load Problem + Scrape Statement ────────────────────────────────
   useEffect(() => {
@@ -129,10 +165,19 @@ const ProblemPage = () => {
         // Extract sample test cases from scraped HTML
         if (payload.problem?.statementHtml) {
           const extracted = extractSamples(payload.problem.statementHtml);
-          setSamples(extracted);
+          const hidden = payload.problem.hiddenTestcases || [];
+          const maskedHidden = hidden.map((tc) => ({
+            input: tc.isHidden ? '*** HIDDEN ***' : tc.input,
+            output: tc.isHidden ? '*** HIDDEN ***' : tc.output,
+            isHidden: tc.isHidden,
+            realInput: tc.input,
+            realOutput: tc.output,
+          }));
+          const combined = [...extracted, ...maskedHidden];
+          setSamples(combined);
           // Pre-fill custom input with first sample input
-          if (extracted.length > 0 && extracted[0].input) {
-            setCustomInput(extracted[0].input);
+          if (combined.length > 0 && combined[0].input && !combined[0].isHidden) {
+            setCustomInput(combined[0].input);
           }
         }
       } catch (err) {
@@ -150,6 +195,46 @@ const ProblemPage = () => {
       controller.abort();
     };
   }, [contestId, index]);
+
+  // ── Typeset MathJax when statementHtml changes ─────────────────────
+  useEffect(() => {
+    if (!problem?.statementHtml) return;
+
+    if (!window.MathJax) {
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$$$', '$$$'], ['\\(', '\\)']],
+          displayMath: [['$$$$$', '$$$$$'], ['\\[', '\\]']],
+        },
+        options: {
+          skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+        },
+      };
+    }
+
+    const scriptId = 'mathjax-script';
+    let script = document.getElementById(scriptId);
+
+    if (!script) {
+      script = document.createElement('script');
+      script.id = scriptId;
+      script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.async = true;
+      script.onload = () => {
+        if (window.MathJax && window.MathJax.typesetPromise) {
+          window.MathJax.typesetPromise().catch((err) => console.error(err));
+        }
+      };
+      document.head.appendChild(script);
+    } else {
+      const timer = setTimeout(() => {
+        if (window.MathJax && window.MathJax.typesetPromise) {
+          window.MathJax.typesetPromise().catch((err) => console.error(err));
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [problem?.statementHtml]);
 
   // ── Run Code via Wandbox ───────────────────────────────────────────
   const handleRunCode = useCallback(async () => {
@@ -200,7 +285,92 @@ const ProblemPage = () => {
     }
   }, [running, code, customInput, language, token]);
 
+  // ── Run All Tests ──────────────────────────────────────────────────
+  const handleRunAllTests = useCallback(async () => {
+    if (running || !code.trim() || samples.length === 0) return;
+    setRunning(true);
+    setActiveIOTab('testcases');
+    setIoPanelOpen(true);
+
+    // Initialize results
+    const initialResults = samples.map(s => ({
+      ...s,
+      actualOutput: null,
+      status: 'Pending',
+    }));
+    setTestResults(initialResults);
+
+    try {
+      for (let i = 0; i < samples.length; i++) {
+        setTestResults(prev => {
+          const newArr = [...prev];
+          newArr[i].status = 'Running';
+          return newArr;
+        });
+
+        const res = await fetch(`${API_URL}/code/execute`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            language,
+            code,
+            stdin: samples[i].isHidden ? samples[i].realInput : samples[i].input,
+          }),
+        });
+
+        const result = await res.json();
+
+        let status = 'Error';
+        let actualOutput = '';
+
+        if (!res.ok) {
+          actualOutput = result.message || 'Lỗi server.';
+        } else if (result.compile_output) {
+          actualOutput = result.compile_output;
+          status = 'Compile Error';
+        } else {
+          const rawStdout = result.stdout || '';
+          const rawStderr = result.stderr ? `\n--- stderr ---\n${result.stderr}` : '';
+          actualOutput = rawStdout + rawStderr;
+
+          const expectedRaw = samples[i].isHidden ? samples[i].realOutput : samples[i].output;
+          const expected = (expectedRaw || '').trim();
+          const actual = rawStdout.trim();
+
+          status = (actual === expected) ? 'Passed' : 'Failed';
+          if (result.status?.id !== 3 && status !== 'Passed') {
+            status = 'Runtime Error';
+          }
+        }
+
+        setTestResults(prev => {
+          const newArr = [...prev];
+          newArr[i].status = status;
+          newArr[i].actualOutput = actualOutput;
+          return newArr;
+        });
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setRunning(false);
+    }
+  }, [running, code, language, token, samples]);
+
   // ── Helpers ────────────────────────────────────────────────────────
+  const handleCopyCode = () => {
+    navigator.clipboard.writeText(code).catch(() => { });
+  };
+
+  const handleResetCode = () => {
+    if (window.confirm('Reset code về mặc định?')) {
+      if (problem) setCode(buildStarterCode(problem, language));
+    }
+  };
+
   const handleLanguageChange = (nextLanguage) => {
     setLanguage(nextLanguage);
     if (problem) setCode(buildStarterCode(problem, nextLanguage));
@@ -214,13 +384,18 @@ const ProblemPage = () => {
 
   const handleRetryLoad = () => window.location.reload();
 
-  const handleUseSample = (sampleInput) => {
-    setCustomInput(sampleInput);
+  const handleUseSample = (sampleInput, isHidden = false, realInput = null) => {
+    // Không cho phép copy hidden test case input
+    if (isHidden && !realInput) {
+      alert('Không thể sao chép input của test case ẩn. Hãy code chính xác để giải quyết bài này.');
+      return;
+    }
+    setCustomInput(realInput || sampleInput);
     setActiveIOTab('input');
   };
 
   const handleCopyOutput = () => {
-    navigator.clipboard.writeText(output).catch(() => {});
+    navigator.clipboard.writeText(output).catch(() => { });
   };
 
   const statusColor = runStatus
@@ -272,24 +447,34 @@ const ProblemPage = () => {
             <span className="problem-solved-count">✓ {problem.solvedCount?.toLocaleString() || 0}</span>
           </div>
         </div>
-        <a
-          href={problemUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="problem-external-link"
-          title="Mở trên Codeforces"
-        >
-          <FiExternalLink size={14} /> Codeforces
-        </a>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <button
+            type="button"
+            className="problem-team-room-btn"
+            onClick={() => navigate(`/room/CF-${problem.id}?problem=${problem.id}`)}
+            title="Tạo phòng giải bài cùng mọi người"
+          >
+            <FiUsers size={13} /> Giải nhóm (Tạo phòng)
+          </button>
+          <a
+            href={problemUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="problem-external-link"
+            title="Mở trên Codeforces"
+          >
+            <FiExternalLink size={14} /> Codeforces
+          </a>
+        </div>
       </header>
 
       {warning && <div className="problems-warning" style={{ margin: '0 24px' }}>{warning}</div>}
 
       {/* ── Workspace: 2 panel layout ── */}
-      <div className="problem-workspace">
+      <div className="problem-workspace" ref={workspaceRef}>
 
         {/* ── LEFT: Problem Statement (scraped) ── */}
-        <section className="problem-statement-panel">
+        <section className="problem-statement-panel" style={{ width: `${leftWidth}%` }}>
           {problem.statementHtml ? (
             <div
               ref={statementRef}
@@ -316,8 +501,11 @@ const ProblemPage = () => {
           )}
         </section>
 
+        {/* Resizer */}
+        <div className="panel-resizer" onMouseDown={handleMouseDown} />
+
         {/* ── RIGHT: Code Editor + Input/Output ── */}
-        <section className="problem-right-panel">
+        <section className="problem-right-panel" style={{ width: `${100 - leftWidth}%` }}>
 
           {/* Editor top bar */}
           <div className="problem-editor-topbar">
@@ -325,6 +513,13 @@ const ProblemPage = () => {
               <FiTerminal size={13} /> Solution
             </span>
             <div className="editor-topbar-right">
+              <button type="button" className="toolbar-action-btn" onClick={handleCopyCode} title="Copy code">
+                <FiCopy size={13} /> Copy
+              </button>
+              <button type="button" className="toolbar-action-btn" onClick={handleResetCode} title="Reset code">
+                <FiRefreshCw size={13} /> Reset
+              </button>
+              <span className="toolbar-divider" />
               <div className="lang-select-wrap">
                 <LanguageSelector language={language} setLanguage={handleLanguageChange} />
               </div>
@@ -338,6 +533,7 @@ const ProblemPage = () => {
               setCode={setCode}
               language={language}
               settings={DEFAULT_SETTINGS}
+              hideToolbar={true}
             />
           </div>
 
@@ -359,9 +555,16 @@ const ProblemPage = () => {
                   onClick={(e) => { e.stopPropagation(); setActiveIOTab('output'); setIoPanelOpen(true); }}
                 >
                   Output
-                  {runStatus && (
+                  {runStatus && activeIOTab !== 'output' && (
                     <span className="io-status-dot" style={{ background: statusColor }} />
                   )}
+                </button>
+                <button
+                  type="button"
+                  className={`io-tab ${activeIOTab === 'testcases' ? 'active' : ''}`}
+                  onClick={(e) => { e.stopPropagation(); setActiveIOTab('testcases'); setIoPanelOpen(true); }}
+                >
+                  Test Cases
                 </button>
               </div>
 
@@ -374,10 +577,15 @@ const ProblemPage = () => {
                         key={i}
                         type="button"
                         className="sample-fill-btn"
-                        onClick={(e) => { e.stopPropagation(); handleUseSample(s.input); }}
-                        title={`Điền Sample ${i + 1}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleUseSample(s.input, s.isHidden, s.realInput);
+                        }}
+                        title={s.isHidden ? 'Test case ẩn - không thể copy' : `Điền Sample ${i + 1}`}
+                        disabled={s.isHidden}
+                        style={s.isHidden ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
                       >
-                        Sample {i + 1}
+                        Sample {i + 1} {s.isHidden ? '🔒' : ''}
                       </button>
                     ))}
                   </div>
@@ -415,7 +623,7 @@ const ProblemPage = () => {
                     placeholder="Nhập dữ liệu đầu vào (stdin) tại đây...&#10;Ví dụ:&#10;5&#10;1 2 3 4 5"
                     spellCheck={false}
                   />
-                ) : (
+                ) : activeIOTab === 'output' ? (
                   <div className="io-output-area">
                     {running ? (
                       <div className="io-running">
@@ -438,7 +646,61 @@ const ProblemPage = () => {
                       </div>
                     )}
                   </div>
-                )}
+                ) : activeIOTab === 'testcases' ? (
+                  <div className="testcases-area">
+                    {samples.length === 0 ? (
+                      <div className="io-placeholder">
+                        Không tìm thấy sample test cases trong đề bài.
+                      </div>
+                    ) : (
+                      <div className="test-results-list">
+                        <div className="test-summary-bar">
+                          <span className="test-summary-count">{samples.length} test case{samples.length > 1 ? 's' : ''}</span>
+                          {testResults && (
+                            <span className="test-summary-result">
+                              <span className="passed-count">✓ {testResults.filter(t => t.status === 'Passed').length}</span>
+                              <span className="failed-count">✗ {testResults.filter(t => t.status !== 'Passed' && t.status !== 'Pending' && t.status !== 'Running').length}</span>
+                            </span>
+                          )}
+                        </div>
+                        {samples.map((sample, i) => {
+                          const result = testResults?.[i];
+                          const statusClass = result ? result.status.toLowerCase().replace(' ', '-') : 'pending';
+                          return (
+                            <div key={i} className={`test-case-card ${statusClass}`}>
+                              <div className="test-case-header">
+                                <span className="test-case-title">
+                                  Sample {i + 1} {sample.isHidden ? '🔒 HIDDEN' : ''}
+                                </span>
+                                {result && <span className="test-case-status">{result.status}</span>}
+                              </div>
+                              <div className="test-case-body">
+                                <div className="test-case-io">
+                                  <div className="io-col">
+                                    <strong>Input</strong>
+                                    <pre>{sample.input}</pre>
+                                  </div>
+                                  <div className="io-col">
+                                    <strong>Expected Output</strong>
+                                    <pre>{sample.output}</pre>
+                                  </div>
+                                  {result && (
+                                    <div className="io-col">
+                                      <strong>Actual Output</strong>
+                                      <pre className={result.status === 'Failed' || result.status === 'Runtime Error' || result.status === 'Compile Error' ? 'error-text' : result.status === 'Passed' ? 'passed-text' : ''}>
+                                        {result.actualOutput !== null ? result.actualOutput : (result.status === 'Running' ? '⏳ Đang chạy...' : '—')}
+                                      </pre>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                ) : null}
               </div>
             )}
           </div>
@@ -447,11 +709,23 @@ const ProblemPage = () => {
           <div className="problem-bottom-bar">
             <button
               type="button"
+              className="run-tests-btn"
+              onClick={handleRunAllTests}
+              disabled={running || samples.length === 0}
+            >
+              {running && activeIOTab === 'testcases' ? (
+                <><div className="problem-loading-spinner tiny" /> Đang chạy...</>
+              ) : (
+                <><FiCheckCircle size={13} /> Run All Tests</>
+              )}
+            </button>
+            <button
+              type="button"
               className="run-code-btn"
               onClick={handleRunCode}
               disabled={running}
             >
-              {running ? (
+              {running && activeIOTab !== 'testcases' ? (
                 <><div className="problem-loading-spinner tiny" /> Đang chạy...</>
               ) : (
                 <><FiPlay size={13} /> Run</>
