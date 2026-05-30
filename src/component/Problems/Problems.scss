@@ -32,11 +32,25 @@
   align-items: center;
   gap: 8px;
   user-select: none;
-  background: linear-gradient(135deg, #10b981, #059669);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--text-primary);
   margin-bottom: 8px;
   &:hover { opacity: 0.9; }
+}
+
+.problems-brand img {
+  width: 46px;
+  height: 34px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.problems-slogan {
+  color: #7dd3c7;
+  font-size: 13px;
+  font-weight: 700;
+  margin: 4px 0 4px;
 }
 
 .problem-filter-section {
@@ -1471,5 +1485,4 @@
 .test-case-card.pending .test-case-header {
   background: rgba(255, 255, 255, 0.02);
 }
-
 

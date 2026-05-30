@@ -2,13 +2,14 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Header.scss';
 import { FiPlay, FiShare2, FiCopy, FiCheck, FiChevronDown, FiLogOut, FiUser, FiClock, FiArrowLeft, FiHome } from 'react-icons/fi';
-import { LiaAccessibleIcon } from "react-icons/lia";
 import { LANGUAGE_VERSION, LANGUAGE_DISPLAY_NAME } from './constants';
 import LanguageSelector from './LanguageSelector';
 import EditorSettings from '../EditorSettings/EditorSettings';
 import Avatar from '../Avatar/Avatar.jsx';
 import '../Avatar/Avatar.scss';
 import { FiSettings, FiZap } from 'react-icons/fi';
+
+const CODEXA_LOGO = '/codexa-logo.png';
 
 const Header = ({ onRun, isRunning, language, setLanguage, roomId, isConnected, onlineUsers = [], currentUser = {}, onOpenHistory, editorSettings, setEditorSettings, aiOpen, setAIOpen }) => {
   const [copied, setCopied] = useState(false);
@@ -67,8 +68,11 @@ const Header = ({ onRun, isRunning, language, setLanguage, roomId, isConnected, 
         </button>
 
         <div className="logo">
-          <div className="logo-icon"><LiaAccessibleIcon size={24} color="#d7d4ceff" /></div>
-          CodeRoom
+          <div className="logo-icon"><img src={CODEXA_LOGO} alt="Codexa logo" /></div>
+          <div className="logo-copy">
+            <span>Codexa</span>
+            <small>Instant Code. Boundless Data.</small>
+          </div>
         </div>
 
         <div className="divider-v" />

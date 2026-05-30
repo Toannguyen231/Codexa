@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiMail, FiLock, FiUser, FiCode, FiUsers, FiZap, FiCpu } from 'react-icons/fi';
-import { LiaAccessibleIcon } from 'react-icons/lia';
 import './Login.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const CODEXA_LOGO = '/codexa-logo.png';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -61,9 +61,10 @@ const Login = () => {
                 {/* ── Left: Branding ── */}
                 <div className="login-brand">
                     <div className="login-brand-logo">
-                        <LiaAccessibleIcon size={36} color="#fff" />
+                        <img src={CODEXA_LOGO} alt="Codexa logo" />
                     </div>
-                    <h1>CodeRoom</h1>
+                    <h1>Codexa</h1>
+                    <p className="login-brand-slogan">Instant Code. Boundless Data.</p>
                     <p>Nền tảng lập trình cộng tác thời gian thực — code cùng nhau, mọi lúc mọi nơi.</p>
 
                     <div className="login-brand-features">

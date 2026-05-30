@@ -12,6 +12,8 @@ import {
   readProblemStatuses,
 } from './problemUtils';
 
+const CODEXA_LOGO = '/codexa-logo.png';
+
 const getSelectedTags = (searchParams) => (
   (searchParams.get('tags') || '').split(',').map((tag) => tag.trim()).filter(Boolean)
 );
@@ -100,7 +102,8 @@ const ProblemListPage = () => {
     <div className="problems-page">
       <aside className="problems-sidebar">
         <div className="problems-brand" onClick={() => navigate('/rooms')} role="button" tabIndex={0}>
-          CodeRoom
+          <img src={CODEXA_LOGO} alt="Codexa logo" />
+          <span>Codexa</span>
         </div>
 
         <div className="problem-filter-section">
@@ -163,6 +166,7 @@ const ProblemListPage = () => {
         <header className="problems-header">
           <div>
             <h1>Algorithm Problems</h1>
+            <div className="problems-slogan">Instant Code. Boundless Data.</div>
             <p>{data.total || 0} bài Codeforces phù hợp</p>
           </div>
           <div className="problems-header-actions">

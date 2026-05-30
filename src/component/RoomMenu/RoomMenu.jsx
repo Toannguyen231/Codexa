@@ -6,10 +6,10 @@ import {
 } from 'react-icons/fi';
 import Avatar from '../Avatar/Avatar.jsx';
 import '../Avatar/Avatar.scss';
-import { LiaAccessibleIcon } from 'react-icons/lia';
 import './RoomMenu.scss';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const CODEXA_LOGO = '/codexa-logo.png';
 
 const timeAgo = (dateStr) => {
   const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
@@ -220,9 +220,12 @@ const RoomMenu = () => {
         <div className="rm-header-left">
           <div className="rm-logo">
             <div className="rm-logo-icon">
-              <LiaAccessibleIcon size={18} />
+              <img src={CODEXA_LOGO} alt="Codexa logo" />
             </div>
-            CodeRoom
+            <div className="rm-logo-copy">
+              <span>Codexa</span>
+              <small>Instant Code. Boundless Data.</small>
+            </div>
           </div>
         </div>
 
@@ -252,7 +255,8 @@ const RoomMenu = () => {
       <div className="rm-content">
         {/* Hero */}
         <div className="rm-hero">
-          <h1>🚀 Chọn phòng để bắt đầu code</h1>
+          <h1>Codexa</h1>
+          <div className="rm-hero-slogan">Instant Code. Boundless Data.</div>
           <p>Tham gia phòng có sẵn hoặc tạo phòng mới để cùng nhau lập trình real-time</p>
         </div>
 
