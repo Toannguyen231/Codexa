@@ -144,7 +144,9 @@ const OutputPanel = ({ output, isRunning, onClear, stdin, setStdin, samples = []
                     return (
                       <div key={i} className={`test-case-card ${statusClass}`}>
                         <div className="test-case-header">
-                          <span className="test-case-title">Sample {i + 1}</span>
+                          <span className="test-case-title">
+                            {sample.isHidden ? `Hidden ${i + 1} 🔒` : `Sample ${i + 1}`}
+                          </span>
                           {result && <span className="test-case-status">{result.status}</span>}
                         </div>
                         <div className="test-case-body">

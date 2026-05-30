@@ -9,7 +9,7 @@ import '../Avatar/Avatar.scss';
 import './RoomMenu.scss';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-const CODEXA_LOGO = '/codexa-logo.png';
+const CODEXA_LOGO = '/codexa-logo-transparent.png';
 
 const timeAgo = (dateStr) => {
   const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);

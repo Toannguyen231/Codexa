@@ -4,7 +4,7 @@ import { FiMail, FiLock, FiUser, FiCode, FiUsers, FiZap, FiCpu } from 'react-ico
 import './Login.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-const CODEXA_LOGO = '/codexa-logo.png';
+const CODEXA_LOGO = '/codexa-logo-transparent.png';
 
 const Login = () => {
     const navigate = useNavigate();

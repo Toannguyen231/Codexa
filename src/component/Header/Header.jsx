@@ -9,7 +9,7 @@ import Avatar from '../Avatar/Avatar.jsx';
 import '../Avatar/Avatar.scss';
 import { FiSettings, FiZap } from 'react-icons/fi';
 
-const CODEXA_LOGO = '/codexa-logo.png';
+const CODEXA_LOGO = '/codexa-logo-transparent.png';
 
 const Header = ({ onRun, isRunning, language, setLanguage, roomId, isConnected, onlineUsers = [], currentUser = {}, onOpenHistory, editorSettings, setEditorSettings, aiOpen, setAIOpen }) => {
   const [copied, setCopied] = useState(false);

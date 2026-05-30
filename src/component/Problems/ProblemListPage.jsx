@@ -12,7 +12,7 @@ import {
   readProblemStatuses,
 } from './problemUtils';
 
-const CODEXA_LOGO = '/codexa-logo.png';
+const CODEXA_LOGO = '/codexa-logo-transparent.png';
 
 const getSelectedTags = (searchParams) => (
   (searchParams.get('tags') || '').split(',').map((tag) => tag.trim()).filter(Boolean)

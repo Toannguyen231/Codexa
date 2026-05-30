@@ -286,6 +286,67 @@ const ProblemPage = () => {
   }, [running, code, customInput, language, token]);
 
   // ── Run All Tests ──────────────────────────────────────────────────
+  const runAllProblemTests = useCallback(async () => {
+    const finalResults = samples.map(s => ({
+      ...s,
+      actualOutput: null,
+      status: 'Pending',
+    }));
+    setTestResults(finalResults);
+
+    for (let i = 0; i < samples.length; i++) {
+      finalResults[i] = { ...finalResults[i], status: 'Running' };
+      setTestResults([...finalResults]);
+
+      const res = await fetch(`${API_URL}/code/execute`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          language,
+          code,
+          stdin: samples[i].isHidden ? samples[i].realInput : samples[i].input,
+        }),
+      });
+
+      const result = await res.json();
+
+      let status = 'Error';
+      let actualOutput = '';
+
+      if (!res.ok) {
+        actualOutput = result.message || 'Lỗi server.';
+      } else if (result.compile_output) {
+        actualOutput = result.compile_output;
+        status = 'Compile Error';
+      } else {
+        const rawStdout = result.stdout || '';
+        const rawStderr = result.stderr ? `\n--- stderr ---\n${result.stderr}` : '';
+        actualOutput = rawStdout + rawStderr;
+
+        const expectedRaw = samples[i].isHidden ? samples[i].realOutput : samples[i].output;
+        const expected = (expectedRaw || '').trim();
+        const actual = rawStdout.trim();
+
+        status = (actual === expected) ? 'Passed' : 'Failed';
+        if (result.status?.id !== 3 && status !== 'Passed') {
+          status = 'Runtime Error';
+        }
+      }
+
+      finalResults[i] = {
+        ...finalResults[i],
+        status,
+        actualOutput,
+      };
+      setTestResults([...finalResults]);
+    }
+
+    return finalResults;
+  }, [code, language, token, samples]);
+
   const handleRunAllTests = useCallback(async () => {
     if (running || !code.trim() || samples.length === 0) return;
     setRunning(true);
@@ -376,9 +437,59 @@ const ProblemPage = () => {
     if (problem) setCode(buildStarterCode(problem, nextLanguage));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!problem) return;
-    writeProblemStatus(problem.id, 'attempted');
+    if (running || !code.trim()) return;
+    if (samples.length === 0) {
+      window.alert('Chưa có test case để judge bài này.');
+      return;
+    }
+
+    setRunning(true);
+    setActiveIOTab('testcases');
+    setIoPanelOpen(true);
+
+    try {
+      const results = await runAllProblemTests();
+      const passedCount = results.filter((result) => result.status === 'Passed').length;
+      const passed = passedCount === results.length;
+
+      writeProblemStatus(problem.id, passed ? 'solved' : 'attempted');
+
+      if (passed) {
+        try {
+          await fetch(`${API_URL}/leaderboard/record-solve`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              problemData: {
+                id: problem.id,
+                problemId: problem.id,
+                title: problem.name,
+                problemTitle: problem.name,
+                difficulty: problem.difficulty,
+              },
+              code,
+              language,
+              status: 'Accepted',
+            }),
+          });
+        } catch (err) {
+          console.warn('[Submit] Failed to record leaderboard solve:', err);
+        }
+      }
+
+      window.alert(
+        passed
+          ? `Accepted! Passed ${passedCount}/${results.length} test cases.`
+          : `Wrong Answer. Passed ${passedCount}/${results.length} test cases.`
+      );
+    } finally {
+      setRunning(false);
+    }
     window.alert('Submit judging sẽ được nối ở phase tiếp theo.');
   };
 
@@ -585,7 +696,7 @@ const ProblemPage = () => {
                         disabled={s.isHidden}
                         style={s.isHidden ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
                       >
-                        Sample {i + 1} {s.isHidden ? '🔒' : ''}
+                        {s.isHidden ? `Hidden ${i + 1}` : `Sample ${i + 1}`} {s.isHidden ? '🔒' : ''}
                       </button>
                     ))}
                   </div>
@@ -670,7 +781,7 @@ const ProblemPage = () => {
                             <div key={i} className={`test-case-card ${statusClass}`}>
                               <div className="test-case-header">
                                 <span className="test-case-title">
-                                  Sample {i + 1} {sample.isHidden ? '🔒 HIDDEN' : ''}
+                                  {sample.isHidden ? `Hidden ${i + 1} 🔒` : `Sample ${i + 1}`}
                                 </span>
                                 {result && <span className="test-case-status">{result.status}</span>}
                               </div>
