@@ -3,7 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import { FiArrowLeft } from 'react-icons/fi';
 import { getMe, updateProfile, updateAvatar, deleteAvatar, changePassword } from './api';
 import { resolveAvatar } from '../../utils/avatar';
+import API from '../../api';
 import './Profile.scss';
+
+const RANK_COLORS = {
+  'Sắt': '#A0AEC0',
+  'Đồng': '#B45309',
+  'Bạc': '#BFDBFE',
+  'Vàng': '#FCD34D',
+  'Tinh Anh': '#A78BFA',
+  'Kim Cương': '#06B6D4',
+  'Thách Đấu': '#FF6B6B'
+};
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -17,6 +28,8 @@ const Profile = () => {
   const [saving, setSaving] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [rankData, setRankData] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -26,6 +39,16 @@ const Profile = () => {
       .then((u) => { setUser(u); setUsername(u.username || ''); setBio(u.bio || ''); })
       .catch(() => navigate('/'))
       .finally(() => setLoading(false));
+
+    // Fetch rank and statistics
+    API.get('/leaderboard/me/stats')
+      .then((res) => {
+        if (res.data.success) {
+          setRankData(res.data);
+        }
+      })
+      .catch((err) => console.error('Error fetching rank data:', err))
+      .finally(() => setStatsLoading(false));
   }, [navigate]);
 
   const syncLocalUser = (updated) => {
@@ -124,56 +147,113 @@ const Profile = () => {
         </section>
 
         <div className="profile-main">
-      <form className="profile-form" onSubmit={handleSaveProfile}>
-        <label htmlFor="username">Username</label>
-        <input
-          id="username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          minLength={3}
-          maxLength={30}
-          required
-        />
-        <label htmlFor="email">Email</label>
-        <input id="email" value={user.email} disabled />
-        <label htmlFor="bio">Bio</label>
-        <textarea
-          id="bio"
-          value={bio}
-          onChange={(e) => setBio(e.target.value)}
-          maxLength={200}
-          placeholder="Giới thiệu ngắn về bạn..."
-        />
-        <div className="profile-char-count">{bio.length}/200</div>
-        {user.createdAt && (
-          <div className="profile-meta">
-            Tham gia: {new Date(user.createdAt).toLocaleDateString('vi-VN')}
-          </div>
-        )}
-        <button type="submit" disabled={saving}>{saving ? 'Đang lưu...' : 'Lưu thay đổi'}</button>
-      </form>
+          {/* Rank Section */}
+          {!statsLoading && rankData && (
+            <section className="profile-rank-section">
+              <h2>🏆 Thông Tin Hạng Chuyên Gia</h2>
+              <div className="rank-card">
+                <div className="rank-info">
+                  <div className="rank-badge-large" style={{ backgroundColor: RANK_COLORS[rankData.user.rank] }}>
+                    {rankData.user.rank}
+                  </div>
+                  <div className="rank-details">
+                    <div className="rank-item">
+                      <span className="label">Vị Trí</span>
+                      <span className="value">#{rankData.user.rankPosition}</span>
+                    </div>
+                    <div className="rank-item">
+                      <span className="label">Tổng Điểm</span>
+                      <span className="value">{rankData.user.totalPoints.toLocaleString()}</span>
+                    </div>
+                    <div className="rank-item">
+                      <span className="label">Bài Giải Được</span>
+                      <span className="value">{rankData.user.problemsSolved}</span>
+                    </div>
+                  </div>
+                </div>
 
-      <form className="profile-form" onSubmit={handleChangePassword}>
-        <h2>Đổi mật khẩu</h2>
-        <label htmlFor="currentPassword">Mật khẩu hiện tại</label>
-        <input
-          id="currentPassword"
-          type="password"
-          value={currentPassword}
-          onChange={(e) => setCurrentPassword(e.target.value)}
-          required
-        />
-        <label htmlFor="newPassword">Mật khẩu mới</label>
-        <input
-          id="newPassword"
-          type="password"
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
-          minLength={6}
-          required
-        />
-        <button type="submit" disabled={saving}>{saving ? 'Đang xử lý...' : 'Đổi mật khẩu'}</button>
-      </form>
+                <div className="rank-breakdown">
+                  <h3>Chi Tiết Theo Độ Khó</h3>
+                  <div className="difficulty-stats">
+                    <div className="stat-item easy">
+                      <span className="difficulty-name">Easy</span>
+                      <span className="difficulty-count">{rankData.user.easyProblems}</span>
+                      <span className="difficulty-points">50 pts/bài</span>
+                    </div>
+                    <div className="stat-item medium">
+                      <span className="difficulty-name">Medium</span>
+                      <span className="difficulty-count">{rankData.user.mediumProblems}</span>
+                      <span className="difficulty-points">100 pts/bài</span>
+                    </div>
+                    <div className="stat-item hard">
+                      <span className="difficulty-name">Hard</span>
+                      <span className="difficulty-count">{rankData.user.hardProblems}</span>
+                      <span className="difficulty-points">200 pts/bài</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="submission-rate">
+                  <h3>Tỷ Lệ Thành Công</h3>
+                  <div className="rate-value">{rankData.stats.submissionRate}</div>
+                  <div className="rate-details">
+                    {rankData.stats.acceptedSubmissions}/{rankData.stats.totalSubmissions} bài được chấp nhận
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
+          <form className="profile-form" onSubmit={handleSaveProfile}>
+            <label htmlFor="username">Username</label>
+            <input
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              minLength={3}
+              maxLength={30}
+              required
+            />
+            <label htmlFor="email">Email</label>
+            <input id="email" value={user.email} disabled />
+            <label htmlFor="bio">Bio</label>
+            <textarea
+              id="bio"
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              maxLength={200}
+              placeholder="Giới thiệu ngắn về bạn..."
+            />
+            <div className="profile-char-count">{bio.length}/200</div>
+            {user.createdAt && (
+              <div className="profile-meta">
+                Tham gia: {new Date(user.createdAt).toLocaleDateString('vi-VN')}
+              </div>
+            )}
+            <button type="submit" disabled={saving}>{saving ? 'Đang lưu...' : 'Lưu thay đổi'}</button>
+          </form>
+
+          <form className="profile-form" onSubmit={handleChangePassword}>
+            <h2>Đổi mật khẩu</h2>
+            <label htmlFor="currentPassword">Mật khẩu hiện tại</label>
+            <input
+              id="currentPassword"
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              required
+            />
+            <label htmlFor="newPassword">Mật khẩu mới</label>
+            <input
+              id="newPassword"
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              minLength={6}
+              required
+            />
+            <button type="submit" disabled={saving}>{saving ? 'Đang xử lý...' : 'Đổi mật khẩu'}</button>
+          </form>
         </div>
       </div>
     </div>

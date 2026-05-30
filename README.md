@@ -62,6 +62,16 @@ Select any code snippet and ask AI to:
 - **Intelligent Caching** — 10x faster on second runs
 - **Multi-Key Fallback** — Never runs out of API quota
 
+### 🏆 **Gamified Ranking System**
+Compete globally with an intelligent ranking system:
+- **7 Tier System** — Iron, Bronze, Silver, Gold, Platinum, Diamond, Master
+- **Point-Based Progression** — Easy (50pts), Medium (100pts), Hard (200pts)
+- **Global Leaderboard** — Real-time rankings with 1000+ concurrent users
+- **Personal Statistics** — Track progress: problems solved, success rate, points earned
+- **Rank Badges** — Color-coded tiers with visual indicators
+- **Automatic Scoring** — Points awarded only on accepted solutions
+- **Profile Integration** — Display rank and stats on user profile
+
 ### 📊 **Version Control Built-In**
 Save up to 20 code snapshots per session. Restore any previous version instantly — lightweight version control without learning Git.
 
@@ -91,6 +101,8 @@ Text-based communication right in the sidebar. No need to switch between Discord
 | Real-Time Sync | ✅ | ✅ | ✅ | ✅ |
 | Multi-Language Execution | ✅ | ❌ | ✅ | ✅ |
 | AI Code Assistant | ✅ | ❌ | ✅ | ❌ |
+| **Gamified Ranking** | **✅** | **❌** | ✅ | ✅ |
+| **Leaderboard** | **✅** | **❌** | ✅ | ✅ |
 | **Cost** | **Free** | Free | $7-29/mo | $150+/mo |
 | **Latency** | **<50ms** | <100ms | ~200ms | ~500ms |
 | Test Case System | ✅ | ❌ | ✅ | ✅ |
@@ -209,6 +221,9 @@ docker run -d -p 27017:27017 mongo:7
 | History Snapshots | 20 per room |
 | API Requests/sec | 1000+ |
 | Uptime | 99.9% |
+| **Ranking Tiers** | **7 levels** |
+| **Points per Problem** | **50-200 pts** |
+| **Max Points** | **Unlimited** |
 
 ---
 
@@ -223,6 +238,8 @@ Project_code_realTime/
 │   │   │   ├── RoomMenu/
 │   │   │   ├── CodeEditor/
 │   │   │   ├── AIPanel/
+│   │   │   ├── Leaderboard/        # 🆕 Ranking leaderboard
+│   │   │   ├── Profile/            # 📊 Updated with rank stats
 │   │   │   └── ...
 │   │   ├── hooks/
 │   │   ├── styles/
@@ -237,10 +254,15 @@ Project_code_realTime/
 │   │   ├── auth.js
 │   │   ├── rooms.js
 │   │   ├── problems.js
+│   │   ├── leaderboard.js          # 🆕 Ranking routes
 │   │   └── ...
 │   ├── models/
 │   │   ├── User.js
 │   │   ├── Room.js
+│   │   ├── ProblemSolving.js       # 🆕 Track problem solutions
+│   │   └── ...
+│   ├── services/
+│   │   ├── scoringService.js       # 🆕 Points calculation
 │   │   └── ...
 │   ├── middleware/
 │   ├── package.json
@@ -248,9 +270,37 @@ Project_code_realTime/
 │
 ├── docker-compose.yml              # Local development
 ├── DEPLOYMENT_GUIDE.md             # Detailed deployment
+├── SCORING_SYSTEM_GUIDE.md         # 🆕 Ranking system docs
 ├── QUICK_DEPLOY.md                 # Quick reference
 └── README.md                       # This file
 ```
+
+---
+
+## 🎮 How to Use CodeRoom
+
+### Create or Join a Coding Session
+
+1. **Login/Register** — Sign up with email or login
+2. **Create Room** — Click "Create Room" to start a session
+3. **Share Link** — Invite teammates by sharing the room link
+4. **Collaborate** — Start coding in real-time
+
+### Solve Practice Problems & Gain Rank
+
+1. **Browse Problems** — Go to `/problems` to see Codeforces problems
+2. **Select Difficulty** — Filter by Easy, Medium, or Hard
+3. **Write Solution** — Use the Monaco Editor to code
+4. **Run Tests** — Test against sample + hidden test cases
+5. **Submit** — Submit your solution
+6. **Earn Points** — Get points only if solution is accepted
+7. **Check Ranking** — Visit `/leaderboard` to see your global rank
+
+### Track Your Progress
+
+- **Profile Page** — View your rank tier, total points, and statistics
+- **Leaderboard** — See where you rank among all users worldwide
+- **Statistics** — Track problems solved by difficulty (Easy/Medium/Hard)
 
 ---
 
@@ -302,6 +352,49 @@ git push origin main
 
 ---
 
+## 🏆 Ranking System Features
+
+### 7-Tier Ranking System
+
+CodeRoom uses a competitive ranking system with 7 distinct tiers:
+
+```
+👑 Thách Đấu (Master)        ← 12,001+ Points
+💎 Kim Cương (Diamond)       ← 8,001 - 12,000 Points
+💜 Tinh Anh (Platinum)       ← 5,001 - 8,000 Points
+🥇 Vàng (Gold)               ← 3,001 - 5,000 Points
+🥈 Bạc (Silver)              ← 1,501 - 3,000 Points
+🥉 Đồng (Bronze)             ← 501 - 1,500 Points
+⚔️  Sắt (Iron)               ← 0 - 500 Points
+```
+
+### Point System
+
+| Difficulty | Points | Use Case |
+|------------|--------|----------|
+| **Easy** | 50 pts | Warm-up problems, basic algorithms |
+| **Medium** | 100 pts | Intermediate challenges, logic puzzles |
+| **Hard** | 200 pts | Advanced problems, optimization |
+
+### Key Features
+
+- **Global Leaderboard** — View top 100 competitors worldwide
+- **Personal Dashboard** — Track your rank, points, and progress
+- **Statistics** — See problems solved by difficulty
+- **Real-Time Updates** — Rank updates instantly after each accepted solution
+- **Achievement Badges** — Unlock badges as you reach new tiers
+- **Nearby Competitors** — See where you stand compared to similar-ranked players
+
+### How Points Work
+
+1. ✅ **Solve a Problem** — Write and test your solution
+2. 📊 **Get Accepted** — Your code passes all test cases (visible + hidden)
+3. ⭐ **Earn Points** — Automatic points based on difficulty
+4. 📈 **Rank Up** — Your tier updates when you hit threshold points
+5. 🏆 **Compete** — See your position on the global leaderboard
+
+---
+
 ## 🤝 Contributing
 
 We welcome contributions! Here's how to get started:
@@ -328,6 +421,7 @@ npm run dev
 | [QUICK_DEPLOY.md](./QUICK_DEPLOY.md) | 5-minute deployment quick reference |
 | [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) | Detailed step-by-step deployment |
 | [AI_TESTCASE_GUIDE.md](./AI_TESTCASE_GUIDE.md) | AI test case generation system |
+| [SCORING_SYSTEM_GUIDE.md](./SCORING_SYSTEM_GUIDE.md) | Gamified ranking & points system |
 | [DETAILED_ARCHITECTURE_ANALYSIS.md](./DETAILED_ARCHITECTURE_ANALYSIS.md) | System architecture deep dive |
 | [VERIFICATION_CHECKLIST.md](./VERIFICATION_CHECKLIST.md) | Pre-launch testing checklist |
 
@@ -356,6 +450,22 @@ npm run dev
 - Check MongoDB connection
 - Verify JWT_SECRET is set
 - Clear browser cookies and login again
+
+**Q: Why am I not earning points?**
+- Verify your solution status shows "Accepted"
+- Only accepted solutions earn points
+- Check if you've already solved this problem (no double points)
+- Ensure the problem difficulty is set correctly
+
+**Q: How do I check my rank?**
+- Go to `/leaderboard` to see global rankings
+- Visit your Profile to see your personal stats and rank
+- Your position updates in real-time after each accepted solution
+
+**Q: Can I lose points or rank?**
+- No, points are cumulative and only increase
+- Rank is determined by total points and never decreases
+- Failed submissions don't affect your score
 
 ---
 
@@ -387,6 +497,15 @@ Dashboard: (Available for admin users)
 ---
 
 ## 💡 Roadmap
+
+### ✅ Q1 2026 - Completed
+- [x] Real-time collaborative code editor
+- [x] Multi-language code execution
+- [x] AI code assistant (Gemini 2.5)
+- [x] Smart hidden test case generation
+- [x] **Gamified ranking system (7 tiers)**
+- [x] **Global leaderboard**
+- [x] **Personal statistics & progress tracking**
 
 ### Q2 2026
 - [ ] Multi-cursor conflict resolution
@@ -448,4 +567,4 @@ Built with ❤️ by the CodeRoom team, powered by:
 ---
 
 **Last Updated:** May 30, 2026  
-**Version:** 1.0.0 - Production Ready
+**Version:** 1.1.0 - Ranking System Added
