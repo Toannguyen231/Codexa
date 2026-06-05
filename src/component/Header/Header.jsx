@@ -191,6 +191,14 @@ const Header = ({ onRun, isRunning, language, setLanguage, roomId, isConnected, 
               >
                 <FiUser size={13} /> Profile
               </button>
+              {currentUser.role === 'admin' && (
+                <button
+                  className="profile-menu-item"
+                  onClick={() => { setProfileOpen(false); navigate('/admin'); }}
+                >
+                  <FiSettings size={13} /> Admin Panel
+                </button>
+              )}
               <button className="profile-menu-item logout" onClick={handleLogout}>
                 <FiLogOut size={13} /> Log out
               </button>

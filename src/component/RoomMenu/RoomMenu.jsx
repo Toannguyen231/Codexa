@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   FiPlus, FiSearch, FiLogOut, FiRefreshCw, FiUsers, FiClock,
-  FiCode, FiArrowRight, FiX, FiHash, FiLock, FiUnlock, FiEye, FiEyeOff, FiUser
+  FiCode, FiArrowRight, FiX, FiHash, FiLock, FiUnlock, FiEye, FiEyeOff, FiUser, FiSettings
 } from 'react-icons/fi';
 import Avatar from '../Avatar/Avatar.jsx';
 import '../Avatar/Avatar.scss';
@@ -239,6 +239,11 @@ const RoomMenu = () => {
             <Avatar user={currentUser} size="sm" />
             <span className="rm-user-name">{currentUser.username || 'User'}</span>
           </button>
+          {currentUser.role === 'admin' && (
+            <button className="rm-btn-profile rm-btn-admin" onClick={() => navigate('/admin')} style={{ border: '1px solid #c084fc', color: '#c084fc' }}>
+              <FiSettings size={13} /> Admin Panel
+            </button>
+          )}
           <button className="rm-btn-profile" onClick={() => navigate('/problems')}>
             <FiCode size={13} /> Problems
           </button>
