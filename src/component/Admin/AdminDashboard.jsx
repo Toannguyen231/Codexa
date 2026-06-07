@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  FiArrowLeft, FiUsers, FiCpu, FiCode, FiLayers, 
-  FiSearch, FiEdit2, FiTrash2, FiPlus, FiGlobe, 
+import {
+  FiArrowLeft, FiUsers, FiCpu, FiCode, FiLayers,
+  FiSearch, FiEdit2, FiTrash2, FiPlus, FiGlobe,
   FiPlay, FiCheck, FiX, FiRefreshCw, FiAlertCircle, FiShield
 } from 'react-icons/fi';
+import { getRankImage, getRankOrder } from '../../utils/rankImages';
 import './AdminDashboard.scss';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
@@ -51,7 +52,7 @@ const AdminDashboard = () => {
   const [problemsSearch, setProblemsSearch] = useState('');
   const [problemsDifficulty, setProblemsDifficulty] = useState('All');
   const [problemsLoading, setProblemsLoading] = useState(false);
-  
+
   // Modals state
   const [showImportModal, setShowImportModal] = useState(false);
   const [importContestId, setImportContestId] = useState('');
@@ -360,10 +361,10 @@ const AdminDashboard = () => {
   // SVG Rank Distribution helper
   const renderRankChart = () => {
     if (!stats || !stats.rankDistribution) return null;
-    
+
     const distribution = stats.rankDistribution;
     const maxVal = Math.max(...Object.values(distribution), 1);
-    
+
     return (
       <div className="rank-chart-container">
         {Object.entries(distribution).map(([rankName, count]) => {
@@ -372,9 +373,9 @@ const AdminDashboard = () => {
             <div key={rankName} className="rank-chart-bar-row">
               <span className="rank-name-lbl">{rankName}</span>
               <div className="rank-bar-bg">
-                <div 
-                  className="rank-bar-fill" 
-                  style={{ 
+                <div
+                  className="rank-bar-fill"
+                  style={{
                     width: `${percent}%`,
                     backgroundColor: ['#A0AEC0', '#B45309', '#BFDBFE', '#FCD34D', '#A78BFA', '#06B6D4', '#FF6B6B'][
                       ['Sắt', 'Đồng', 'Bạc', 'Vàng', 'Tinh Anh', 'Kim Cương', 'Thách Đấu'].indexOf(rankName)
@@ -426,25 +427,25 @@ const AdminDashboard = () => {
       {/* Workspace Sidebar & Content */}
       <div className="admin-workspace">
         <aside className="admin-sidebar">
-          <button 
+          <button
             className={`sidebar-nav-btn ${activeTab === 'overview' ? 'active' : ''}`}
             onClick={() => setActiveTab('overview')}
           >
             <FiLayers size={16} /> Tổng Quan Hệ Thống
           </button>
-          <button 
+          <button
             className={`sidebar-nav-btn ${activeTab === 'users' ? 'active' : ''}`}
             onClick={() => setActiveTab('users')}
           >
             <FiUsers size={16} /> Quản Lý Người Dùng
           </button>
-          <button 
+          <button
             className={`sidebar-nav-btn ${activeTab === 'problems' ? 'active' : ''}`}
             onClick={() => setActiveTab('problems')}
           >
             <FiCode size={16} /> Quản Lý Bài Tập
           </button>
-          <button 
+          <button
             className={`sidebar-nav-btn ${activeTab === 'rooms' ? 'active' : ''}`}
             onClick={() => setActiveTab('rooms')}
           >
@@ -539,15 +540,15 @@ const AdminDashboard = () => {
                 <div className="pane-actions">
                   <div className="search-wrap">
                     <FiSearch size={14} />
-                    <input 
-                      type="text" 
-                      placeholder="Tìm theo username hoặc email..." 
+                    <input
+                      type="text"
+                      placeholder="Tìm theo username hoặc email..."
                       value={usersSearch}
                       onChange={(e) => setUsersSearch(e.target.value)}
                     />
                   </div>
-                  <select 
-                    value={usersRole} 
+                  <select
+                    value={usersRole}
                     onChange={(e) => setUsersRole(e.target.value)}
                     className="filter-select"
                   >
@@ -593,12 +594,13 @@ const AdminDashboard = () => {
                               </span>
                             </td>
                             <td>
-                              <span className="rank-badge" style={{ 
-                                backgroundColor: ['#A0AEC0', '#B45309', '#BFDBFE', '#FCD34D', '#A78BFA', '#06B6D4', '#FF6B6B'][
-                                  ['Sắt', 'Đồng', 'Bạc', 'Vàng', 'Tinh Anh', 'Kim Cương', 'Thách Đấu'].indexOf(u.rank)
-                                ] || '#fff'
-                              }}>
-                                {u.rank || 'Sắt'}
+                              <span className="rank-badge-image">
+                                <img
+                                  src={getRankImage(u.rank || 'Sắt')}
+                                  alt={u.rank || 'Sắt'}
+                                  className="rank-badge-img"
+                                />
+                                <span>{u.rank || 'Sắt'}</span>
                               </span>
                             </td>
                             <td>{(u.totalPoints || 0).toLocaleString()} pts</td>
@@ -642,15 +644,15 @@ const AdminDashboard = () => {
                   </button>
                   <div className="search-wrap">
                     <FiSearch size={14} />
-                    <input 
-                      type="text" 
-                      placeholder="Tìm bài tập theo tên..." 
+                    <input
+                      type="text"
+                      placeholder="Tìm bài tập theo tên..."
                       value={problemsSearch}
                       onChange={(e) => setProblemsSearch(e.target.value)}
                     />
                   </div>
-                  <select 
-                    value={problemsDifficulty} 
+                  <select
+                    value={problemsDifficulty}
                     onChange={(e) => setProblemsDifficulty(e.target.value)}
                     className="filter-select"
                   >
@@ -732,9 +734,9 @@ const AdminDashboard = () => {
                 <div className="pane-actions">
                   <div className="search-wrap">
                     <FiSearch size={14} />
-                    <input 
-                      type="text" 
-                      placeholder="Lọc phòng theo tên hoặc Room ID..." 
+                    <input
+                      type="text"
+                      placeholder="Lọc phòng theo tên hoặc Room ID..."
                       value={roomsSearch}
                       onChange={(e) => setRoomsSearch(e.target.value)}
                     />
@@ -763,8 +765,8 @@ const AdminDashboard = () => {
                     </thead>
                     <tbody>
                       {rooms
-                        .filter(r => 
-                          r.roomId.toLowerCase().includes(roomsSearch.toLowerCase()) || 
+                        .filter(r =>
+                          r.roomId.toLowerCase().includes(roomsSearch.toLowerCase()) ||
                           r.name.toLowerCase().includes(roomsSearch.toLowerCase())
                         )
                         .map(r => (
@@ -833,9 +835,9 @@ const AdminDashboard = () => {
                 </div>
                 <div className="form-group">
                   <label>Tổng điểm tích lũy (totalPoints)</label>
-                  <input 
-                    type="number" 
-                    value={editPoints} 
+                  <input
+                    type="number"
+                    value={editPoints}
                     onChange={(e) => setEditPoints(Number(e.target.value))}
                     min="0"
                   />
@@ -868,13 +870,13 @@ const AdminDashboard = () => {
                 </p>
                 {importError && <div className="modal-alert error">{importError}</div>}
                 {importMessage && <div className="modal-alert success">{importMessage}</div>}
-                
+
                 <div className="form-row">
                   <div className="form-group">
                     <label>Contest ID</label>
-                    <input 
-                      type="number" 
-                      placeholder="VD: 4" 
+                    <input
+                      type="number"
+                      placeholder="VD: 4"
                       value={importContestId}
                       onChange={(e) => setImportContestId(e.target.value)}
                       required
@@ -882,9 +884,9 @@ const AdminDashboard = () => {
                   </div>
                   <div className="form-group">
                     <label>Index (Ký tự chỉ mục)</label>
-                    <input 
-                      type="text" 
-                      placeholder="VD: A" 
+                    <input
+                      type="text"
+                      placeholder="VD: A"
                       value={importIndex}
                       onChange={(e) => setImportIndex(e.target.value)}
                       required
@@ -915,7 +917,7 @@ const AdminDashboard = () => {
               <div className="testcase-modal-top">
                 <span className="p-badge font-bold">CF-{selectedProblem.contestId}-{selectedProblem.index}</span>
                 <div className="modal-actions-bar">
-                  <button 
+                  <button
                     className="ai-btn"
                     onClick={handleGenerateAiTestcases}
                     disabled={aiGenerating || testcaseLoading}
@@ -943,8 +945,8 @@ const AdminDashboard = () => {
                           <strong>Testcase #{idx + 1}</strong>
                           <div className="tc-header-right">
                             <label className="tc-hidden-toggle">
-                              <input 
-                                type="checkbox" 
+                              <input
+                                type="checkbox"
                                 checked={tc.isHidden}
                                 onChange={(e) => handleTestcaseFieldChange(idx, 'isHidden', e.target.checked)}
                               />
@@ -958,16 +960,16 @@ const AdminDashboard = () => {
                         <div className="testcase-row-io">
                           <div className="io-box">
                             <label>Đầu vào (Input)</label>
-                            <textarea 
-                              value={tc.input} 
+                            <textarea
+                              value={tc.input}
                               onChange={(e) => handleTestcaseFieldChange(idx, 'input', e.target.value)}
                               placeholder="Nhập input của testcase..."
                             />
                           </div>
                           <div className="io-box">
                             <label>Đầu ra (Output)</label>
-                            <textarea 
-                              value={tc.output} 
+                            <textarea
+                              value={tc.output}
                               onChange={(e) => handleTestcaseFieldChange(idx, 'output', e.target.value)}
                               placeholder="Nhập output tương ứng..."
                             />

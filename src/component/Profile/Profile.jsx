@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { FiArrowLeft } from 'react-icons/fi';
 import { getMe, updateProfile, updateAvatar, deleteAvatar, changePassword } from './api';
 import { resolveAvatar } from '../../utils/avatar';
+import { getRankImage } from '../../utils/rankImages';
 import API from '../../api';
 import './Profile.scss';
-
+import HeatmapCalendar from './HeatmapCalendar.jsx';
 const RANK_COLORS = {
   'Sắt': '#A0AEC0',
   'Đồng': '#B45309',
@@ -30,25 +31,47 @@ const Profile = () => {
   const [newPassword, setNewPassword] = useState('');
   const [rankData, setRankData] = useState(null);
   const [statsLoading, setStatsLoading] = useState(true);
-
+  const [activityData, setActivityData] = useState(null);
+  const [loadingActivity, setLoadingActivity] = useState(false);
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) { navigate('/'); return; }
 
     getMe()
-      .then((u) => { setUser(u); setUsername(u.username || ''); setBio(u.bio || ''); })
-      .catch(() => navigate('/'))
-      .finally(() => setLoading(false));
+      .then((u) => { 
+        setUser(u); 
+        setUsername(u.username || ''); 
+        setBio(u.bio || ''); 
+        
+        // Fetch rank and statistics after getting user data
+        API.get('/leaderboard/me/stats')
+          .then((res) => {
+            if (res.data.success) {
+              setRankData(res.data);
+            }
+          })
+          .catch((err) => console.error('Error fetching rank data:', err))
+          .finally(() => setStatsLoading(false));
+          
+        // Fetch activity data after getting user data
+        if (u?._id) {
+          const id = u?._id;
+          setLoadingActivity(true);
 
-    // Fetch rank and statistics
-    API.get('/leaderboard/me/stats')
-      .then((res) => {
-        if (res.data.success) {
-          setRankData(res.data);
+          API.get(`/leaderboard/user-activity/${id}`)
+            .then((res) => {
+              if (res.data.success) {
+                setActivityData(res.data.activityData);
+              } else {
+                console.error('Activity data not successful:', res.data);
+              }
+            })
+            .catch((err) => console.error('Error fetching activity:', err))
+            .finally(() => setLoadingActivity(false));
         }
       })
-      .catch((err) => console.error('Error fetching rank data:', err))
-      .finally(() => setStatsLoading(false));
+      .catch(() => navigate('/'))
+      .finally(() => setLoading(false));
   }, [navigate]);
 
   const syncLocalUser = (updated) => {
@@ -153,8 +176,13 @@ const Profile = () => {
               <h2>🏆 Thông Tin Hạng Chuyên Gia</h2>
               <div className="rank-card">
                 <div className="rank-info">
-                  <div className="rank-badge-large" style={{ backgroundColor: RANK_COLORS[rankData.user.rank] }}>
-                    {rankData.user.rank}
+                  <div className="rank-badge-large-image">
+                    <img
+                      src={getRankImage(rankData.user.rank)}
+                      alt={rankData.user.rank}
+                      className="rank-badge-img"
+                    />
+                    <span className="rank-text" style={{ color: RANK_COLORS[rankData.user.rank] || '#fff' }}>{rankData.user.rank}</span>
                   </div>
                   <div className="rank-details">
                     <div className="rank-item">
@@ -254,6 +282,14 @@ const Profile = () => {
             />
             <button type="submit" disabled={saving}>{saving ? 'Đang xử lý...' : 'Đổi mật khẩu'}</button>
           </form>
+          
+          {/* Always show heatmap */}
+          <HeatmapCalendar
+            heatmapData={activityData?.heatmapData || []}
+            currentStreak={activityData?.currentStreak || 0}
+            bestStreak={activityData?.bestStreak || 0}
+            username={user?.username || ''}
+          />
         </div>
       </div>
     </div>

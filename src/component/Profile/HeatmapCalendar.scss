@@ -1,0 +1,257 @@
+.heatmap-container {
+    margin-top: 30px;
+    padding: 24px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    max-width: 100%;
+    box-sizing: border-box;
+    box-shadow: 
+      0 1px 3px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.02);
+
+    .heatmap-header {
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .streak-info {
+            display: flex;
+            gap: 30px;
+
+            .streak-item {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 14px;
+
+                .streak-icon {
+                    font-size: 20px;
+                }
+
+                .streak-label {
+                    color: var(--text-muted);
+                    font-weight: 500;
+                }
+
+                .streak-value {
+                    color: var(--accent);
+                    font-weight: 700;
+                    font-size: 18px;
+                }
+            }
+        }
+    }
+
+    .heatmap-wrapper {
+        overflow-x: auto;
+        margin: 20px 0;
+        -webkit-overflow-scrolling: touch;
+
+        .heatmap-content {
+            display: flex;
+            gap: 8px;
+            min-width: min-content;
+
+            .day-labels {
+                display: flex;
+                flex-direction: column;
+                font-size: 9px;
+                color: var(--text-muted);
+                font-weight: 500;
+                margin-top: 28px; /* Alignment with top of grid */
+                gap: 3px;
+
+                .day-label {
+                    height: 11px;
+                    display: flex;
+                    align-items: center;
+                    text-align: right;
+                    justify-content: flex-end;
+                    width: 20px;
+                }
+            }
+
+            .heatmap-grid-wrapper {
+                position: relative;
+
+                .month-labels {
+                    position: relative;
+                    height: 20px;
+                    margin-bottom: 8px;
+                    font-size: 11px;
+                    color: var(--text-muted);
+                    font-weight: 500;
+
+                    .month-label {
+                        position: absolute;
+                        top: 0;
+                    }
+                }
+
+                .heatmap-grid {
+                    display: flex;
+                    gap: 3px;
+
+                    .heatmap-week {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 3px;
+
+                        .heatmap-day {
+                            width: 11px;
+                            height: 11px;
+                            border-radius: 2px;
+                            cursor: pointer;
+                            transition: all 0.1s ease;
+
+                            &:hover {
+                                transform: scale(1.3);
+                                box-shadow: 0 0 8px rgba(57, 211, 83, 0.6);
+                                z-index: 10;
+                            }
+
+                            &.day-0 {
+                                background-color: #161b22 !important;
+                            }
+
+                            &.day-1-2 {
+                                background-color: #0e4429 !important;
+                            }
+
+                            &.day-3-5 {
+                                background-color: #006d32 !important;
+                            }
+
+                            &.day-6-10 {
+                                background-color: #26a641 !important;
+                            }
+
+                            &.day-10\+ {
+                                background-color: #39d353 !important;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    .heatmap-tooltip {
+        position: fixed;
+        background: rgba(31, 41, 55, 0.9);
+        color: white;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        white-space: nowrap;
+        z-index: 1000;
+        pointer-events: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(4px);
+
+        &::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-top: 4px solid rgba(31, 41, 55, 0.9);
+        }
+    }
+
+    .heatmap-legend {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 16px;
+        justify-content: flex-end; /* Align to the right like GitHub */
+        padding-right: 24px;
+
+        .legend-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .legend-item {
+            width: 11px;
+            height: 11px;
+            border-radius: 2px;
+            border: none;
+        }
+    }
+}
+
+// Responsive
+@media (max-width: 768px) {
+    .heatmap-container {
+        padding: 16px;
+
+        .heatmap-header {
+            .streak-info {
+                gap: 15px;
+
+                .streak-item {
+                    font-size: 12px;
+
+                    .streak-icon {
+                        font-size: 16px;
+                    }
+
+                    .streak-value {
+                        font-size: 14px;
+                    }
+                }
+            }
+        }
+
+        .heatmap-wrapper {
+            .heatmap-content {
+                gap: 6px;
+
+                .day-labels {
+                    font-size: 8px;
+                    margin-top: 28px;
+                    gap: 2px;
+
+                    .day-label {
+                        width: 16px;
+                        height: 10px;
+                    }
+                }
+
+                .heatmap-grid-wrapper {
+                    .heatmap-grid {
+                        gap: 2px;
+
+                        .heatmap-week {
+                            gap: 2px;
+
+                            .heatmap-day {
+                                width: 10px;
+                                height: 10px;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        .heatmap-legend {
+            gap: 4px;
+            margin-top: 12px;
+            padding-right: 12px;
+
+            .legend-item {
+                width: 10px;
+                height: 10px;
+            }
+        }
+    }
+}

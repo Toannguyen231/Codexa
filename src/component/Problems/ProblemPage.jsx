@@ -490,7 +490,6 @@ const ProblemPage = () => {
     } finally {
       setRunning(false);
     }
-    window.alert('Submit judging sẽ được nối ở phase tiếp theo.');
   };
 
   const handleRetryLoad = () => window.location.reload();

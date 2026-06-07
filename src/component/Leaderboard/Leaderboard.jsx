@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './Leaderboard.scss';
 import API from '../../api';
+import { getRankImage } from '../../utils/rankImages';
 
 const RANK_COLORS = {
     'Sắt': '#A0AEC0',           // Gray
@@ -116,8 +117,13 @@ const Leaderboard = () => {
                     </div>
                     <div className="user-info">
                         <h2>{currentUserRank.username}</h2>
-                        <div className="rank-badge" style={{ backgroundColor: RANK_COLORS[currentUserRank.rank] }}>
-                            {getRankIcon(currentUserRank.rank)} {currentUserRank.rank}
+                        <div className="rank-badge-image">
+                            <img
+                                src={getRankImage(currentUserRank.rank)}
+                                alt={currentUserRank.rank}
+                                className="rank-img"
+                            />
+                            <span className="rank-name">{currentUserRank.rank}</span>
                         </div>
                     </div>
                     <div className="user-stats">
@@ -143,7 +149,11 @@ const Leaderboard = () => {
                 <div className="rank-stats">
                     {Object.entries(rankStats).map(([rank, count]) => (
                         <div key={rank} className="rank-stat-item">
-                            <div className="rank-dot" style={{ backgroundColor: RANK_COLORS[rank] }}></div>
+                            <img
+                                src={getRankImage(rank)}
+                                alt={rank}
+                                className="rank-stat-img"
+                            />
                             <span className="rank-name">{rank}</span>
                             <span className="rank-count">{count}</span>
                         </div>
@@ -187,12 +197,13 @@ const Leaderboard = () => {
                                     </div>
                                 </td>
                                 <td className="tier-col">
-                                    <div
-                                        className="rank-badge-small"
-                                        style={{ backgroundColor: user.rankColor }}
-                                        title={user.rank}
-                                    >
-                                        {getRankIcon(user.rank)} {user.rank}
+                                    <div className="rank-badge-small-image" title={user.rank}>
+                                        <img
+                                            src={getRankImage(user.rank)}
+                                            alt={user.rank}
+                                            className="rank-badge-img"
+                                        />
+                                        <span>{user.rank}</span>
                                     </div>
                                 </td>
                                 <td className="points-col">
