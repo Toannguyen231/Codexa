@@ -10,6 +10,7 @@ import {
   getProblemRoomPath,
   getStatusIcon,
   readProblemStatuses,
+  fetchProblemStatuses,
 } from './problemUtils';
 
 const CODEXA_LOGO = '/codexa-logo-transparent.png';
@@ -25,7 +26,14 @@ const ProblemListPage = () => {
   const [loading, setLoading] = useState(true);
   const [warning, setWarning] = useState('');
   const [error, setError] = useState('');
-  const [statuses] = useState(readProblemStatuses);
+  const [statuses, setStatuses] = useState({});
+
+  useEffect(() => {
+    const token = localStorage.getItem('token') || '';
+    fetchProblemStatuses(token).then((res) => {
+      setStatuses(res || {});
+    });
+  }, []);
 
   const difficulty = searchParams.get('difficulty') || 'All';
   const search = searchParams.get('search') || '';

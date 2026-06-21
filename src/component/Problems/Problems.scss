@@ -1486,3 +1486,120 @@
   background: rgba(255, 255, 255, 0.02);
 }
 
+/* ── Verdict Summary Bar ── */
+.verdict-summary-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  margin: 16px 24px 0 24px;
+  font-size: 13px;
+  animation: slideDownVerdict 0.3s ease-out;
+
+  &.verdict-ac {
+    background: rgba(16, 185, 129, 0.05);
+    border-color: rgba(16, 185, 129, 0.2);
+    border-left: 4px solid #10b981;
+  }
+  &.verdict-wa {
+    background: rgba(239, 68, 68, 0.05);
+    border-color: rgba(239, 68, 68, 0.2);
+    border-left: 4px solid #ef4444;
+  }
+  &.verdict-ce {
+    background: rgba(245, 158, 11, 0.05);
+    border-color: rgba(245, 158, 11, 0.2);
+    border-left: 4px solid #f59e0b;
+  }
+  &.verdict-re {
+    background: rgba(168, 85, 247, 0.05);
+    border-color: rgba(168, 85, 247, 0.2);
+    border-left: 4px solid #a855f7;
+  }
+  &.verdict-tle {
+    background: rgba(234, 179, 8, 0.05);
+    border-color: rgba(234, 179, 8, 0.2);
+    border-left: 4px solid #eab308;
+  }
+}
+
+.verdict-main-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.verdict-badge {
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.verdict-stats {
+  color: var(--text-secondary);
+}
+
+.verdict-sub-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.verdict-time {
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', 'Consolas', monospace;
+  font-size: 12px;
+}
+
+.verdict-points {
+  color: #10b981;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 3px 8px;
+  background: rgba(16, 185, 129, 0.1);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  animation: ptsPulse 2s ease-in-out infinite;
+}
+
+.close-verdict-btn {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.05);
+  }
+}
+
+@keyframes slideDownVerdict {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ptsPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.2); }
+  50% { box-shadow: 0 0 8px 2px rgba(16, 185, 129, 0.2); }
+}
+
+

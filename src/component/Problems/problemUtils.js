@@ -24,6 +24,7 @@ export const getProblemRoomPath = (problem) => (
   `/room/${encodeURIComponent(getProblemRoomId(problem))}?problem=${encodeURIComponent(problem.id)}`
 );
 
+// ── localStorage fallback (for unauthenticated users) ────────────────
 export const readProblemStatuses = () => {
   try {
     return JSON.parse(localStorage.getItem('coderoom.problemStatuses') || '{}');
@@ -36,6 +37,21 @@ export const writeProblemStatus = (problemId, status) => {
   const current = readProblemStatuses();
   current[problemId] = status;
   localStorage.setItem('coderoom.problemStatuses', JSON.stringify(current));
+};
+
+// ── DB-backed progress (for authenticated users) ─────────────────────
+export const fetchProblemStatuses = async (token) => {
+  if (!token) return readProblemStatuses(); // fallback to localStorage
+  try {
+    const res = await fetch(`${API_URL}/problems/me/statuses`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) return readProblemStatuses();
+    const data = await res.json();
+    return data.statuses || {};
+  } catch {
+    return readProblemStatuses();
+  }
 };
 
 export const getStatusIcon = (status) => {
@@ -72,5 +88,16 @@ export const extractSamples = (html) => {
   }
 
   return samples;
+};
+
+/**
+ * Verdict display config
+ */
+export const VERDICT_CONFIG = {
+  AC: { label: 'Accepted', icon: '✅', color: '#10b981', className: 'verdict-ac' },
+  WA: { label: 'Wrong Answer', icon: '❌', color: '#ef4444', className: 'verdict-wa' },
+  CE: { label: 'Compile Error', icon: '⚠️', color: '#f59e0b', className: 'verdict-ce' },
+  RE: { label: 'Runtime Error', icon: '💥', color: '#a855f7', className: 'verdict-re' },
+  TLE: { label: 'Time Limit Exceeded', icon: '⏰', color: '#eab308', className: 'verdict-tle' },
 };
 

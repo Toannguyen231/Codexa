@@ -23,7 +23,7 @@ import {
   buildProblemUrl,
   getDifficultyClass,
   getProblemRoomPath,
-  writeProblemStatus,
+  VERDICT_CONFIG,
 } from './problemUtils';
 
 const DEFAULT_SETTINGS = {
@@ -53,11 +53,6 @@ const buildStarterCode = (problem, language) => {
 const extractSamples = (html) => {
   if (!html) return [];
   const samples = [];
-  const sampleTestRegex = /<div class="sample-test">([\s\S]*?)<\/div>\s*<\/div>\s*<\/div>/gi;
-  const inputRegex = /<div class="input">[\s\S]*?<pre[^>]*>([\s\S]*?)<\/pre>/gi;
-  const outputRegex = /<div class="output">[\s\S]*?<pre[^>]*>([\s\S]*?)<\/pre>/gi;
-
-  // Simpler approach — find all <pre> inside .input and .output blocks
   const inputBlocks = [];
   const outputBlocks = [];
 
@@ -103,6 +98,12 @@ const ProblemPage = () => {
   // Samples extracted from the scraped HTML
   const [samples, setSamples] = useState([]);
   const [testResults, setTestResults] = useState(null);
+  const [submitResult, setSubmitResult] = useState(null);
+  const [failCount, setFailCount] = useState(0);
+  const [aiHint, setAiHint] = useState('');
+  const [showSolution, setShowSolution] = useState(false);
+  const [solutionCode, setSolutionCode] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
 
   const statementRef = useRef(null);
   const workspaceRef = useRef(null);
@@ -165,19 +166,10 @@ const ProblemPage = () => {
         // Extract sample test cases from scraped HTML
         if (payload.problem?.statementHtml) {
           const extracted = extractSamples(payload.problem.statementHtml);
-          const hidden = payload.problem.hiddenTestcases || [];
-          const maskedHidden = hidden.map((tc) => ({
-            input: tc.isHidden ? '*** HIDDEN ***' : tc.input,
-            output: tc.isHidden ? '*** HIDDEN ***' : tc.output,
-            isHidden: tc.isHidden,
-            realInput: tc.input,
-            realOutput: tc.output,
-          }));
-          const combined = [...extracted, ...maskedHidden];
-          setSamples(combined);
+          setSamples(extracted);
           // Pre-fill custom input with first sample input
-          if (combined.length > 0 && combined[0].input && !combined[0].isHidden) {
-            setCustomInput(combined[0].input);
+          if (extracted.length > 0 && extracted[0].input) {
+            setCustomInput(extracted[0].input);
           }
         }
       } catch (err) {
@@ -285,75 +277,15 @@ const ProblemPage = () => {
     }
   }, [running, code, customInput, language, token]);
 
-  // ── Run All Tests ──────────────────────────────────────────────────
-  const runAllProblemTests = useCallback(async () => {
-    const finalResults = samples.map(s => ({
-      ...s,
-      actualOutput: null,
-      status: 'Pending',
-    }));
-    setTestResults(finalResults);
-
-    for (let i = 0; i < samples.length; i++) {
-      finalResults[i] = { ...finalResults[i], status: 'Running' };
-      setTestResults([...finalResults]);
-
-      const res = await fetch(`${API_URL}/code/execute`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          language,
-          code,
-          stdin: samples[i].isHidden ? samples[i].realInput : samples[i].input,
-        }),
-      });
-
-      const result = await res.json();
-
-      let status = 'Error';
-      let actualOutput = '';
-
-      if (!res.ok) {
-        actualOutput = result.message || 'Lỗi server.';
-      } else if (result.compile_output) {
-        actualOutput = result.compile_output;
-        status = 'Compile Error';
-      } else {
-        const rawStdout = result.stdout || '';
-        const rawStderr = result.stderr ? `\n--- stderr ---\n${result.stderr}` : '';
-        actualOutput = rawStdout + rawStderr;
-
-        const expectedRaw = samples[i].isHidden ? samples[i].realOutput : samples[i].output;
-        const expected = (expectedRaw || '').trim();
-        const actual = rawStdout.trim();
-
-        status = (actual === expected) ? 'Passed' : 'Failed';
-        if (result.status?.id !== 3 && status !== 'Passed') {
-          status = 'Runtime Error';
-        }
-      }
-
-      finalResults[i] = {
-        ...finalResults[i],
-        status,
-        actualOutput,
-      };
-      setTestResults([...finalResults]);
-    }
-
-    return finalResults;
-  }, [code, language, token, samples]);
-
+  // ── Run All Tests (Samples Only) ──────────────────────────────────
   const handleRunAllTests = useCallback(async () => {
     if (running || !code.trim() || samples.length === 0) return;
     setRunning(true);
     setActiveIOTab('testcases');
     setIoPanelOpen(true);
+    setSubmitResult(null); // Clear submit verdict when running test
 
-    // Initialize results
+    // Initialize results with only public sample tests
     const initialResults = samples.map(s => ({
       ...s,
       actualOutput: null,
@@ -378,7 +310,7 @@ const ProblemPage = () => {
           body: JSON.stringify({
             language,
             code,
-            stdin: samples[i].isHidden ? samples[i].realInput : samples[i].input,
+            stdin: samples[i].input,
           }),
         });
 
@@ -397,8 +329,7 @@ const ProblemPage = () => {
           const rawStderr = result.stderr ? `\n--- stderr ---\n${result.stderr}` : '';
           actualOutput = rawStdout + rawStderr;
 
-          const expectedRaw = samples[i].isHidden ? samples[i].realOutput : samples[i].output;
-          const expected = (expectedRaw || '').trim();
+          const expected = (samples[i].output || '').trim();
           const actual = rawStdout.trim();
 
           status = (actual === expected) ? 'Passed' : 'Failed';
@@ -415,11 +346,73 @@ const ProblemPage = () => {
         });
       }
     } catch (err) {
-      console.error(err);
+      console.error('[RunAllTests] Error:', err);
     } finally {
       setRunning(false);
     }
   }, [running, code, language, token, samples]);
+
+  // ── AI Hint & Solution (Phase 4) ───────────────────────────────────
+  const fetchAiHint = async (verdict, results, nextFailCount) => {
+    setAiLoading(true);
+    setAiHint('🤖 AI Mentor đang đọc lỗi và chuẩn bị gợi ý...');
+    try {
+      const compileError = results.find(r => r.status === 'Compile Error' || r.status === 'Error')?.actualOutput || '';
+      const sampleResults = results.filter(r => !r.isHidden);
+
+      const res = await fetch(`${API_URL}/ai/hint`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          code,
+          language,
+          verdict,
+          compileError,
+          sampleResults,
+          failCount: nextFailCount,
+          problemTitle: problem.name,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Lỗi lấy hint.');
+      setAiHint(data.hint);
+    } catch (err) {
+      setAiHint(`⚠️ Không thể kết nối AI: ${err.message}`);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleGetSolution = async () => {
+    if (aiLoading) return;
+    setAiLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/ai/solution`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          code,
+          language,
+          problemTitle: problem.name,
+          failCount,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Không thể lấy lời giải.');
+      setSolutionCode(data.solution);
+      setShowSolution(true);
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   // ── Helpers ────────────────────────────────────────────────────────
   const handleCopyCode = () => {
@@ -448,45 +441,40 @@ const ProblemPage = () => {
     setRunning(true);
     setActiveIOTab('testcases');
     setIoPanelOpen(true);
+    setTestResults(null); // Clear testResults to let submit results display
+    setSubmitResult(null);
+    setAiHint('');
+    setShowSolution(false);
+    setSolutionCode('');
 
     try {
-      const results = await runAllProblemTests();
-      const passedCount = results.filter((result) => result.status === 'Passed').length;
-      const passed = passedCount === results.length;
+      const res = await fetch(`${API_URL}/problems/${contestId}/${index}/submit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ language, code }),
+      });
+      const payload = await res.json();
 
-      writeProblemStatus(problem.id, passed ? 'solved' : 'attempted');
-
-      if (passed) {
-        try {
-          await fetch(`${API_URL}/leaderboard/record-solve`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              problemData: {
-                id: problem.id,
-                problemId: problem.id,
-                title: problem.name,
-                problemTitle: problem.name,
-                difficulty: problem.difficulty,
-              },
-              code,
-              language,
-              status: 'Accepted',
-            }),
-          });
-        } catch (err) {
-          console.warn('[Submit] Failed to record leaderboard solve:', err);
-        }
+      if (!res.ok) {
+        throw new Error(payload.message || 'Submit failed.');
       }
 
-      window.alert(
-        passed
-          ? `Accepted! Passed ${passedCount}/${results.length} test cases.`
-          : `Wrong Answer. Passed ${passedCount}/${results.length} test cases.`
-      );
+      setSubmitResult(payload);
+
+      const passed = Boolean(payload.accepted);
+
+      if (!passed) {
+        const nextFailCount = failCount + 1;
+        setFailCount(nextFailCount);
+        fetchAiHint(payload.verdict, payload.results, nextFailCount);
+      } else {
+        setFailCount(0); // Reset on Accepted
+      }
+    } catch (err) {
+      window.alert(err.message);
     } finally {
       setRunning(false);
     }
@@ -495,7 +483,6 @@ const ProblemPage = () => {
   const handleRetryLoad = () => window.location.reload();
 
   const handleUseSample = (sampleInput, isHidden = false, realInput = null) => {
-    // Không cho phép copy hidden test case input
     if (isHidden && !realInput) {
       alert('Không thể sao chép input của test case ẩn. Hãy code chính xác để giải quyết bài này.');
       return;
@@ -537,6 +524,9 @@ const ProblemPage = () => {
       </div>
     );
   }
+
+  const displayTests = submitResult ? submitResult.results : samples;
+  const displayResults = submitResult ? submitResult.results : testResults;
 
   return (
     <div className="problem-page">
@@ -646,6 +636,62 @@ const ProblemPage = () => {
               hideToolbar={true}
             />
           </div>
+
+          {/* Verdict Summary Bar (Phase 3) */}
+          {submitResult && (
+            <div className={`verdict-summary-bar verdict-${submitResult.verdict.toLowerCase()}`}>
+              <div className="verdict-main-info">
+                <span className="verdict-badge" style={{ color: VERDICT_CONFIG[submitResult.verdict]?.color }}>
+                  {VERDICT_CONFIG[submitResult.verdict]?.icon} {VERDICT_CONFIG[submitResult.verdict]?.label || submitResult.verdictText}
+                </span>
+                <span className="verdict-stats">
+                  Passed {submitResult.passedCount}/{submitResult.total} test cases (Sample: {submitResult.samplePassed}/{submitResult.sampleTotal} | Hidden: {submitResult.hiddenPassed}/{submitResult.hiddenTotal})
+                </span>
+              </div>
+              <div className="verdict-sub-info">
+                <span className="verdict-time">⏳ {submitResult.executionTime} ms</span>
+                {submitResult.scoring?.pointsAwarded > 0 && (
+                  <span className="verdict-points">🏆 +{submitResult.scoring.pointsAwarded} pts {submitResult.scoring.isFirstAC && '(First AC!)'}</span>
+                )}
+                <button type="button" className="close-verdict-btn" onClick={() => { setSubmitResult(null); setAiHint(''); setShowSolution(false); }}>×</button>
+              </div>
+            </div>
+          )}
+
+          {/* AI Hint Panel (Phase 4) */}
+          {aiHint && submitResult?.verdict !== 'AC' && (
+            <div className="ai-hint-panel" style={{ margin: '16px 24px', padding: '16px', background: 'rgba(139, 92, 246, 0.05)', border: '1px solid rgba(139, 92, 246, 0.2)', borderRadius: 'var(--radius-md)' }}>
+              <div className="ai-hint-header" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', fontWeight: 'bold', color: 'var(--accent-purple)' }}>
+                <span>🤖 Gợi ý từ AI Mentor (Thất bại {failCount} lần)</span>
+                {aiLoading && <div className="problem-loading-spinner tiny" />}
+              </div>
+              <div className="ai-hint-body" style={{ fontSize: '13px', lineHeight: '1.6', whiteSpace: 'pre-line' }}>
+                {aiHint}
+              </div>
+              {failCount >= 3 && (
+                <div className="ai-solution-section" style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                  {!showSolution ? (
+                    <button
+                      type="button"
+                      className="solve-team-btn"
+                      onClick={handleGetSolution}
+                      disabled={aiLoading}
+                      style={{ fontSize: '12px', padding: '6px 12px' }}
+                    >
+                      {aiLoading ? 'Đang tải...' : '🔑 Xem lời giải mẫu'}
+                    </button>
+                  ) : (
+                    <div style={{ marginTop: '10px' }}>
+                      <strong style={{ display: 'block', marginBottom: '6px', color: '#10b981' }}>Lời giải mẫu tham khảo:</strong>
+                      <pre style={{ margin: 0, padding: '12px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', overflowX: 'auto', fontFamily: 'JetBrains Mono, monospace', fontSize: '12px', whiteSpace: 'pre-wrap' }}>
+                        {solutionCode}
+                      </pre>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* ── I/O Panel ── */}
           <div className={`problem-io-panel ${ioPanelOpen ? 'open' : 'collapsed'}`}>
@@ -758,23 +804,23 @@ const ProblemPage = () => {
                   </div>
                 ) : activeIOTab === 'testcases' ? (
                   <div className="testcases-area">
-                    {samples.length === 0 ? (
+                    {displayTests.length === 0 ? (
                       <div className="io-placeholder">
-                        Không tìm thấy sample test cases trong đề bài.
+                        Không tìm thấy test cases.
                       </div>
                     ) : (
                       <div className="test-results-list">
                         <div className="test-summary-bar">
-                          <span className="test-summary-count">{samples.length} test case{samples.length > 1 ? 's' : ''}</span>
-                          {testResults && (
+                          <span className="test-summary-count">{displayTests.length} test case{displayTests.length > 1 ? 's' : ''}</span>
+                          {displayResults && (
                             <span className="test-summary-result">
-                              <span className="passed-count">✓ {testResults.filter(t => t.status === 'Passed').length}</span>
-                              <span className="failed-count">✗ {testResults.filter(t => t.status !== 'Passed' && t.status !== 'Pending' && t.status !== 'Running').length}</span>
+                              <span className="passed-count">✓ {displayResults.filter(t => t.status === 'Passed').length}</span>
+                              <span className="failed-count">✗ {displayResults.filter(t => t.status !== 'Passed' && t.status !== 'Pending' && t.status !== 'Running').length}</span>
                             </span>
                           )}
                         </div>
-                        {samples.map((sample, i) => {
-                          const result = testResults?.[i];
+                        {displayTests.map((sample, i) => {
+                          const result = displayResults?.[i];
                           const statusClass = result ? result.status.toLowerCase().replace(' ', '-') : 'pending';
                           return (
                             <div key={i} className={`test-case-card ${statusClass}`}>
