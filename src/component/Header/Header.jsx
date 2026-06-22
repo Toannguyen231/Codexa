@@ -55,6 +55,7 @@ const Header = ({ onRun, isRunning, language, setLanguage, roomId, isConnected, 
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('coderoom.problemStatuses'); // xóa cache trạng thái bài khi đăng xuất
     setProfileOpen(false);
     navigate('/');
   };

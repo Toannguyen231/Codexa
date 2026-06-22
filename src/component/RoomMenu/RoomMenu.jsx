@@ -210,6 +210,7 @@ const RoomMenu = () => {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('coderoom.problemStatuses'); // xóa cache trạng thái bài khi đăng xuất
     navigate('/');
   };
 

@@ -41,16 +41,19 @@ export const writeProblemStatus = (problemId, status) => {
 
 // ── DB-backed progress (for authenticated users) ─────────────────────
 export const fetchProblemStatuses = async (token) => {
-  if (!token) return readProblemStatuses(); // fallback to localStorage
+  // Nếu chưa đăng nhập → dùng localStorage (guest mode)
+  if (!token) return readProblemStatuses();
+  // Đã đăng nhập → luôn lấy từ DB, KHÔNG fallback về localStorage
+  // (tránh hiển thị trạng thái cũ của user khác / guest)
   try {
     const res = await fetch(`${API_URL}/problems/me/statuses`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!res.ok) return readProblemStatuses();
+    if (!res.ok) return {}; // API lỗi → trả về rỗng, không hiển thị sai
     const data = await res.json();
     return data.statuses || {};
   } catch {
-    return readProblemStatuses();
+    return {}; // Network lỗi → trả về rỗng, không hiển thị sai
   }
 };
 

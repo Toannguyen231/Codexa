@@ -44,6 +44,8 @@ const Login = () => {
             // Lưu JWT token vào localStorage
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
+            // Xóa cache status bài toán của user cũ/guest để tránh hiển thị sai trạng thái
+            localStorage.removeItem('coderoom.problemStatuses');
 
             // Chuyển đến trang Room Menu
             navigate('/rooms');
