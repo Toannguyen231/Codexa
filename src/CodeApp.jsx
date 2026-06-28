@@ -10,7 +10,8 @@ import OutputPanel from './component/OutputPanel/OutputPanel';
 import HistoryPanel from './component/History/HistoryPanel';
 import AIPanel from './component/AIPanel/AIPanel';
 import { useRoomManager } from './hooks/useRoomManager';
-import { API_URL, extractSamples } from './component/Problems/problemUtils';
+import { extractSamples } from './component/Problems/problemUtils';
+import API, { fetchRaw } from './api';
 
 /**
  * Component: CodeApp
@@ -53,9 +54,8 @@ function CodeApp() {
 
         const fetchProblem = async () => {
             try {
-                const res = await fetch(`${API_URL}/problems/${parsed.contestId}/${parsed.index}`);
-                const data = await res.json();
-                if (cancelled || !res.ok) return;
+                const { data } = await API.get(`problems/${parsed.contestId}/${parsed.index}`);
+                if (cancelled) return;
                 setProblem(data.problem);
                 
                 if (data.problem?.statementHtml) {
@@ -156,7 +156,6 @@ function CodeApp() {
         wordWrap: 'on'
     });
 
-    // ── Run All Tests ──────────────────────────────────────────────────
     const handleRunAllTests = async () => {
         if (runningTests || isRunning || !code.trim() || samples.length === 0) return;
         setRunningTests(true);
@@ -176,17 +175,13 @@ function CodeApp() {
                     return newArr;
                 });
 
-                const res = await fetch(`${API_URL}/code/execute`, {
+                const res = await fetchRaw('code/execute', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${token}`,
-                    },
-                    body: JSON.stringify({
+                    body: {
                         language,
                         code,
                         stdin: samples[i].isHidden ? samples[i].realInput : samples[i].input,
-                    }),
+                    },
                 });
 
                 const result = await res.json();

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Rnd } from 'react-rnd';
 import { FiX, FiCpu, FiMessageSquare, FiZap, FiTool, FiSend, FiTrash2 } from 'react-icons/fi';
 import './AIPanel.scss';
+import API, { fetchRaw } from '../../api';
 
 const getUserId = () => {
   try {
@@ -26,7 +27,7 @@ const AIPanel = ({ code, language, onClose }) => {
   const lastSavedKeyRef = useRef('');
 
   const token = localStorage.getItem('token');
-  const apiUrl = import.meta.env.VITE_API_URL || '/api';
+  const isAuth = Boolean(token);
 
   messagesRef.current = messages;
 
@@ -50,21 +51,13 @@ const AIPanel = ({ code, language, onClose }) => {
 
     setSaveStatus('saving');
     try {
-      const res = await fetch(`${apiUrl}/ai/history`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          type,
-          question,
-          answer,
-          code: extra.code ?? code,
-          language: extra.language ?? language,
-        }),
+      const { data } = await API.post('ai/history', {
+        type,
+        question,
+        answer,
+        code: extra.code || '',
+        language: extra.language || '',
       });
-      if (!res.ok) throw new Error('save failed');
       setSaveStatus('saved');
       setTimeout(() => setSaveStatus(''), 2000);
       return true;
@@ -73,7 +66,7 @@ const AIPanel = ({ code, language, onClose }) => {
       setTimeout(() => setSaveStatus(''), 3000);
       return false;
     }
-  }, [token, apiUrl, code, language]);
+  }, [token, code, language]);
 
   const flushPendingSave = useCallback(() => {
     const meta = streamMetaRef.current;
@@ -89,17 +82,12 @@ const AIPanel = ({ code, language, onClose }) => {
 
     if (token) {
       try {
-        const res = await fetch(`${apiUrl}/ai/history?limit=30`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.items?.length) {
-            data.items.slice().reverse().forEach((h) => {
-              restored.push({ role: 'user', text: h.question });
-              restored.push({ role: 'ai', text: h.answer, isError: h.answer.startsWith('🚨') });
-            });
-          }
+        const { data } = await API.get('ai/history', { params: { limit: '30' } });
+        if (data.items?.length) {
+          data.items.slice().reverse().forEach((h) => {
+            restored.push({ role: 'user', text: h.question });
+            restored.push({ role: 'ai', text: h.answer, isError: h.answer.startsWith('🚨') });
+          });
         }
       } catch {
         // fallback local
@@ -116,7 +104,7 @@ const AIPanel = ({ code, language, onClose }) => {
     }
 
     if (restored.length) setMessages(restored);
-  }, [token, apiUrl]);
+  }, [token]);
 
   const clearHistory = async () => {
     if (!window.confirm('Xóa toàn bộ lịch sử trò chuyện AI?')) return;
@@ -125,10 +113,7 @@ const AIPanel = ({ code, language, onClose }) => {
     lastSavedKeyRef.current = '';
     if (token) {
       try {
-        await fetch(`${apiUrl}/ai/history`, {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await API.delete('ai/history');
       } catch {
         // local đã xóa
       }
@@ -148,13 +133,9 @@ const AIPanel = ({ code, language, onClose }) => {
     let errorText = '';
 
     try {
-      const response = await fetch(`${apiUrl}/ai/${endpoint}`, {
+      const response = await fetchRaw(`ai/${endpoint}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
+        body: payload,
       });
 
       if (!response.ok) {

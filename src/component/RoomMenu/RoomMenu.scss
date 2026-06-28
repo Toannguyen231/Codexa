@@ -92,10 +92,21 @@
   color: var(--text-secondary);
   font-size: 13px;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
   &:hover {
     background: var(--bg-hover);
     color: var(--text-primary);
+  }
+}
+
+.rm-btn-battle {
+  border-color: var(--accent-purple-dim);
+  color: var(--accent-purple);
+  &:hover {
+    background: var(--accent-purple-dim);
+    border-color: var(--accent-purple);
+    color: var(--text-primary);
+    box-shadow: 0 0 12px var(--accent-purple-glow);
   }
 }
 

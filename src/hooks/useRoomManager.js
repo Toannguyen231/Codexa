@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import useSocket from './useSocket';
 import { executeCode } from '../component/Header/api';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+import API from '../api';
 
 // Code mẫu mặc định cho từng ngôn ngữ
 export const DEFAULT_CODE = {
@@ -117,9 +116,8 @@ export const useRoomManager = (roomId, token, problemId = '') => {
 
         const loadProblem = async () => {
             try {
-                const res = await fetch(`${API_URL}/problems/${parsed.contestId}/${parsed.index}`);
-                const data = await res.json();
-                if (cancelled || !res.ok || !data.problem) return;
+                const { data } = await API.get(`problems/${parsed.contestId}/${parsed.index}`);
+                if (cancelled || !data.problem) return;
 
                 const problem = {
                     ...data.problem,

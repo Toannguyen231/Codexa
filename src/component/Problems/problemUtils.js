@@ -1,3 +1,4 @@
+import API from '../../api';
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 export const DIFFICULTIES = ['All', 'Easy', 'Medium', 'Hard', 'Expert'];
@@ -46,11 +47,7 @@ export const fetchProblemStatuses = async (token) => {
   // Đã đăng nhập → luôn lấy từ DB, KHÔNG fallback về localStorage
   // (tránh hiển thị trạng thái cũ của user khác / guest)
   try {
-    const res = await fetch(`${API_URL}/problems/me/statuses`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!res.ok) return {}; // API lỗi → trả về rỗng, không hiển thị sai
-    const data = await res.json();
+    const { data } = await API.get('problems/me/statuses');
     return data.statuses || {};
   } catch {
     return {}; // Network lỗi → trả về rỗng, không hiển thị sai

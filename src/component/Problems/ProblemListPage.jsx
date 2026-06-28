@@ -3,7 +3,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { FiArrowRight, FiCode, FiSearch, FiUsers, FiRefreshCw, FiAlertCircle } from 'react-icons/fi';
 import './Problems.scss';
 import {
-  API_URL,
   DIFFICULTIES,
   formatSolvedCount,
   getDifficultyClass,
@@ -12,6 +11,7 @@ import {
   readProblemStatuses,
   fetchProblemStatuses,
 } from './problemUtils';
+import API from '../../api';
 
 const CODEXA_LOGO = '/codexa-logo-transparent.png';
 
@@ -67,18 +67,9 @@ const ProblemListPage = () => {
     setLoading(true);
     setError('');
     try {
-      const params = new URLSearchParams(searchParams);
-      params.set('limit', '20');
-      const res = await fetch(`${API_URL}/problems?${params.toString()}`, {
-        signal,
-      });
-
-      if (!res.ok) {
-        const payload = await res.json().catch(() => ({}));
-        throw new Error(payload.message || `Server trả về lỗi ${res.status}`);
-      }
-
-      const payload = await res.json();
+      const params = Object.fromEntries(searchParams);
+      params.limit = '20';
+      const { data: payload } = await API.get('problems', { params, signal });
       setData(payload);
       setWarning(payload.warning || '');
     } catch (err) {

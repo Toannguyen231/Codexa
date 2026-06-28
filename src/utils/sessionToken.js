@@ -1,4 +1,5 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+import API from '../api';
+
 const SESSION_TOKEN_KEY = 'coderoom.sessionToken';
 
 const hasSessionStorage = () => typeof window !== 'undefined' && window.sessionStorage;
@@ -17,13 +18,8 @@ export const getOrCreateSessionToken = async () => {
   const existing = getStoredSessionToken();
   if (existing) return existing;
 
-  const res = await fetch(`${API_URL}/auth/session`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-  });
-  const data = await res.json();
-
-  if (!res.ok || !data.sessionToken) {
+  const { data } = await API.post('auth/session');
+  if (!data.sessionToken) {
     throw new Error(data.message || 'Không thể tạo session token.');
   }
 

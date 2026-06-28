@@ -18,13 +18,14 @@ import CodeEditor from '../Editor/CodeEditor';
 import LanguageSelector from '../Header/LanguageSelector';
 import './Problems.scss';
 import {
-  API_URL,
   LANGUAGE_TEMPLATES,
   buildProblemUrl,
+  extractSamples,
   getDifficultyClass,
   getProblemRoomPath,
   VERDICT_CONFIG,
 } from './problemUtils';
+import API, { fetchRaw } from '../../api';
 
 const DEFAULT_SETTINGS = {
   theme: 'vs-dark',
@@ -47,33 +48,6 @@ const getProblemHeader = (problem, language) => {
 const buildStarterCode = (problem, language) => {
   const template = LANGUAGE_TEMPLATES[language] || LANGUAGE_TEMPLATES['C++'];
   return `${getProblemHeader(problem, language)}\n\n${template}`;
-};
-
-/* ── Trích sample input/output từ HTML đã scrape ── */
-const extractSamples = (html) => {
-  if (!html) return [];
-  const samples = [];
-  const inputBlocks = [];
-  const outputBlocks = [];
-
-  const inputMatch = html.matchAll(/<div class="input">[\s\S]*?<pre[^>]*>([\s\S]*?)<\/pre>/gi);
-  for (const m of inputMatch) {
-    inputBlocks.push(m[1].replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').trim());
-  }
-
-  const outputMatch = html.matchAll(/<div class="output">[\s\S]*?<pre[^>]*>([\s\S]*?)<\/pre>/gi);
-  for (const m of outputMatch) {
-    outputBlocks.push(m[1].replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').trim());
-  }
-
-  for (let i = 0; i < Math.max(inputBlocks.length, outputBlocks.length); i++) {
-    samples.push({
-      input: inputBlocks[i] || '',
-      output: outputBlocks[i] || '',
-    });
-  }
-
-  return samples;
 };
 
 const ProblemPage = () => {
@@ -108,6 +82,7 @@ const ProblemPage = () => {
   const statementRef = useRef(null);
   const workspaceRef = useRef(null);
   const token = localStorage.getItem('token') || '';
+  const isAuth = Boolean(token);
 
   const problemUrl = useMemo(() => (problem ? buildProblemUrl(problem) : ''), [problem]);
 
@@ -152,13 +127,11 @@ const ProblemPage = () => {
     const loadProblem = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`${API_URL}/problems/${contestId}/${index}`, {
-          signal: controller.signal,
+        const { data: payload } = await API.get(`problems/${contestId}/${index}`, {
+          params: { _t: Date.now() },
         });
-        const payload = await res.json();
         if (cancelled) return;
 
-        if (!res.ok) throw new Error(payload.message || 'Không thể tải bài.');
         setProblem(payload.problem);
         setWarning(payload.warning || '');
         setCode(buildStarterCode(payload.problem, language));
@@ -237,17 +210,9 @@ const ProblemPage = () => {
     setActiveIOTab('output');
 
     try {
-      const res = await fetch(`${API_URL}/code/execute`, {
+      const res = await fetchRaw('code/execute', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          language,
-          code,
-          stdin: customInput,
-        }),
+        body: { language, code, stdin: customInput },
       });
 
       const result = await res.json();
@@ -275,7 +240,7 @@ const ProblemPage = () => {
     } finally {
       setRunning(false);
     }
-  }, [running, code, customInput, language, token]);
+  }, [running, code, customInput, language]);
 
   // ── Run All Tests (Samples Only) ──────────────────────────────────
   const handleRunAllTests = useCallback(async () => {
@@ -301,17 +266,9 @@ const ProblemPage = () => {
           return newArr;
         });
 
-        const res = await fetch(`${API_URL}/code/execute`, {
+        const res = await fetchRaw('code/execute', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            language,
-            code,
-            stdin: samples[i].input,
-          }),
+          body: { language, code, stdin: samples[i].input },
         });
 
         const result = await res.json();
@@ -350,7 +307,7 @@ const ProblemPage = () => {
     } finally {
       setRunning(false);
     }
-  }, [running, code, language, token, samples]);
+  }, [running, code, language, samples]);
 
   // ── AI Hint & Solution (Phase 4) ───────────────────────────────────
   const fetchAiHint = async (verdict, results, nextFailCount) => {
@@ -360,25 +317,16 @@ const ProblemPage = () => {
       const compileError = results.find(r => r.status === 'Compile Error' || r.status === 'Error')?.actualOutput || '';
       const sampleResults = results.filter(r => !r.isHidden);
 
-      const res = await fetch(`${API_URL}/ai/hint`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          code,
-          language,
-          verdict,
-          compileError,
-          sampleResults,
-          failCount: nextFailCount,
-          problemTitle: problem.name,
-        }),
+      const { data: resp } = await API.post('ai/hint', {
+        code,
+        language,
+        verdict,
+        compileError,
+        sampleResults,
+        failCount: nextFailCount,
+        problemTitle: problem.name,
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Lỗi lấy hint.');
-      setAiHint(data.hint);
+      setAiHint(resp.hint);
     } catch (err) {
       setAiHint(`⚠️ Không thể kết nối AI: ${err.message}`);
     } finally {
@@ -390,22 +338,13 @@ const ProblemPage = () => {
     if (aiLoading) return;
     setAiLoading(true);
     try {
-      const res = await fetch(`${API_URL}/ai/solution`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          code,
-          language,
-          problemTitle: problem.name,
-          failCount,
-        }),
+      const { data: resp } = await API.post('ai/solution', {
+        code,
+        language,
+        problemTitle: problem.name,
+        failCount,
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Không thể lấy lời giải.');
-      setSolutionCode(data.solution);
+      setSolutionCode(resp.solution);
       setShowSolution(true);
     } catch (err) {
       alert(err.message);
@@ -448,19 +387,7 @@ const ProblemPage = () => {
     setSolutionCode('');
 
     try {
-      const res = await fetch(`${API_URL}/problems/${contestId}/${index}/submit`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ language, code }),
-      });
-      const payload = await res.json();
-
-      if (!res.ok) {
-        throw new Error(payload.message || 'Submit failed.');
-      }
+      const { data: payload } = await API.post(`problems/${contestId}/${index}/submit`, { language, code });
 
       setSubmitResult(payload);
 
