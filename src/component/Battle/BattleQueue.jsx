@@ -15,6 +15,7 @@ const BattleQueue = () => {
   const [countdown, setCountdown] = useState(5);
   const socketRef = useRef(null);
   const timerRef = useRef(null);
+  const matchRoomIdRef = useRef(null);
 
   const token = localStorage.getItem('token') || '';
 
@@ -46,6 +47,7 @@ const BattleQueue = () => {
     socket.on('battle-matched', (data) => {
       setStatus('matched');
       setMatchData(data);
+      matchRoomIdRef.current = data.roomId;
       clearInterval(timerRef.current);
     });
 
@@ -55,8 +57,9 @@ const BattleQueue = () => {
     });
 
     socket.on('battle-start', () => {
-      // Redirect to battle room
-      navigate(`/battle/${matchData?.roomId}`);
+      if (matchRoomIdRef.current) {
+        navigate(`/battle/${matchRoomIdRef.current}`);
+      }
     });
 
     socket.on('battle-error', ({ message }) => {

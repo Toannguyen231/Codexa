@@ -9,6 +9,7 @@ import ProblemPage from './component/Problems/ProblemPage.jsx';
 import AdminDashboard from './component/Admin/AdminDashboard.jsx';
 import BattleHub from './component/Battle/BattleHub.jsx';
 import BattleQueue from './component/Battle/BattleQueue.jsx';
+import BattleRoom from './component/Battle/BattleRoom.jsx';
 import { Routes, Route } from 'react-router-dom';
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/battle" element={<BattleHub />} />
         <Route path="/battle/queue" element={<BattleQueue />} />
+        <Route path="/battle/:id" element={<BattleRoom />} />
       </Routes>
     </div>
   );
