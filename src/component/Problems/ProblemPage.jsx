@@ -26,6 +26,8 @@ import {
   VERDICT_CONFIG,
 } from './problemUtils';
 import API, { fetchRaw } from '../../api';
+import DailyRewardsPopup from '../Daily/DailyRewardsPopup.jsx';
+import '../Daily/DailyRewardsPopup.scss';
 
 const DEFAULT_SETTINGS = {
   theme: 'vs-dark',
@@ -78,6 +80,10 @@ const ProblemPage = () => {
   const [showSolution, setShowSolution] = useState(false);
   const [solutionCode, setSolutionCode] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
+
+  // Daily Rewards popup
+  const [showDailyRewards, setShowDailyRewards] = useState(false);
+  const [dailyRewardsData, setDailyRewardsData] = useState(null);
 
   const statementRef = useRef(null);
   const workspaceRef = useRef(null);
@@ -392,6 +398,21 @@ const ProblemPage = () => {
       setSubmitResult(payload);
 
       const passed = Boolean(payload.accepted);
+
+      // Daily Rewards popup
+      if (passed && payload.daily) {
+        if (payload.daily.completed) {
+          setDailyRewardsData({
+            totalAwarded: payload.daily.totalAwarded,
+            basePoints: payload.daily.basePoints || 0,
+            bonusPoints: payload.daily.bonusPoints || 0,
+            streakBonus: payload.daily.streakBonus || 0,
+            newStreak: payload.daily.newStreak,
+            milestones: payload.daily.milestones || [],
+          });
+          setShowDailyRewards(true);
+        }
+      }
 
       if (!passed) {
         const nextFailCount = failCount + 1;
@@ -820,6 +841,13 @@ const ProblemPage = () => {
           </div>
         </section>
       </div>
+
+      {/* Daily Rewards Popup */}
+      <DailyRewardsPopup
+        show={showDailyRewards}
+        data={dailyRewardsData}
+        onClose={() => setShowDailyRewards(false)}
+      />
     </div>
   );
 };

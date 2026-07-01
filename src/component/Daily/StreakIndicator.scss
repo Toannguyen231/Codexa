@@ -1,0 +1,82 @@
+.sr-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(99, 102, 241, 0.08);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+  font-size: 13px;
+}
+
+.sr-indicator:hover {
+  border-color: rgba(99, 102, 241, 0.2);
+}
+
+.sr-fire {
+  font-size: 16px;
+  line-height: 1;
+  animation: sr-flicker 3s infinite;
+}
+
+@keyframes sr-flicker {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+.sr-count {
+  font-weight: 700;
+  color: #fbbf24;
+  font-size: 14px;
+}
+
+.sr-label {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.sr-label::before {
+  content: 'streak';
+}
+
+/* Tooltip */
+.sr-tooltip {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 220px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #1e293b;
+  border: 1px solid rgba(99, 102, 241, 0.12);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 100;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.sr-indicator:hover .sr-tooltip {
+  display: block;
+}
+
+.sr-tooltip-header {
+  font-weight: 600;
+  color: #e2e8f0;
+  margin-bottom: 6px;
+}
+
+.sr-tooltip-body {
+  color: #94a3b8;
+}
+
+.sr-tooltip-freeze {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(99, 102, 241, 0.06);
+  color: #93c5fd;
+  font-size: 11px;
+}

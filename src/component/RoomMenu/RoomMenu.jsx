@@ -7,6 +7,10 @@ import {
 import Avatar from '../Avatar/Avatar.jsx';
 import '../Avatar/Avatar.scss';
 import './RoomMenu.scss';
+import DailyChallengeCard from '../Daily/DailyChallengeCard.jsx';
+import '../Daily/DailyChallengeCard.scss';
+import StreakIndicator from '../Daily/StreakIndicator.jsx';
+import '../Daily/StreakIndicator.scss';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 const CODEXA_LOGO = '/codexa-logo-transparent.png';
@@ -240,6 +244,7 @@ const RoomMenu = () => {
             <Avatar user={currentUser} size="sm" />
             <span className="rm-user-name">{currentUser.username || 'User'}</span>
           </button>
+          <StreakIndicator />
           {currentUser.role === 'admin' && (
             <button className="rm-btn-profile rm-btn-admin" onClick={() => navigate('/admin')} style={{ border: '1px solid #c084fc', color: '#c084fc' }}>
               <FiSettings size={13} /> Admin Panel
@@ -268,6 +273,9 @@ const RoomMenu = () => {
           <div className="rm-hero-slogan">Instant Code. Boundless Data.</div>
           <p>Tham gia phòng có sẵn hoặc tạo phòng mới để cùng nhau lập trình real-time</p>
         </div>
+
+        {/* Daily Challenge */}
+        <DailyChallengeCard />
 
         {/* Action Bar */}
         <div className="rm-actions">
