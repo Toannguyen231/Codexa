@@ -8,7 +8,7 @@ import {
   getDifficultyClass,
   getProblemRoomPath,
   getStatusIcon,
-  readProblemStatuses,
+  API_URL,
   fetchProblemStatuses,
 } from './problemUtils';
 import API from '../../api';

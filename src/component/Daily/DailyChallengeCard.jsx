@@ -3,9 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { FiChevronRight, FiClock, FiAward, FiCheckCircle, FiZap } from 'react-icons/fi';
 import './DailyChallengeCard.scss';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const getToken = () => localStorage.getItem('accessToken') || localStorage.getItem('token') || '';
+
+const parseJsonResponse = async (res) => {
+  const text = await res.text();
+  if (!text) return {};
+  return JSON.parse(text);
+};
 
 const DailyChallengeCard = () => {
   const navigate = useNavigate();
@@ -45,7 +51,7 @@ const DailyChallengeCard = () => {
         headers: { Authorization: `Bearer ${getToken()}` },
       });
       if (!res.ok) throw new Error('Failed to fetch');
-      const json = await res.json();
+      const json = await parseJsonResponse(res);
       setData(json);
       setError('');
     } catch (err) {

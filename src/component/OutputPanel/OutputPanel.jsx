@@ -6,7 +6,7 @@ const MIN_HEIGHT = 120;
 const MAX_HEIGHT = 500;
 const DEFAULT_HEIGHT = 220;
 
-const OutputPanel = ({ output, isRunning, onClear, stdin, setStdin, samples = [], testResults = null, runningTests = false, onRunAllTests }) => {
+const OutputPanel = ({ output, isRunning, onClear, samples = [], testResults = null, runningTests = false, onRunAllTests }) => {
   const [activeTab, setActiveTab] = useState('console');
   const [height, setHeight] = useState(DEFAULT_HEIGHT);
   const dragRef = useRef(null);

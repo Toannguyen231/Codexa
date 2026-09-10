@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import './HeatmapCalendar.scss';
 
-const HeatmapCalendar = ({ heatmapData, currentStreak, bestStreak, username }) => {
+const HeatmapCalendar = ({ heatmapData, currentStreak, bestStreak, loading = false }) => {
   const [tooltip, setTooltip] = useState({ visible: false, content: '', x: 0, y: 0 });
 
   const getColorByActivity = (count) => {
@@ -35,7 +35,6 @@ const HeatmapCalendar = ({ heatmapData, currentStreak, bestStreak, username }) =
     if (heatmapData && heatmapData.length > 0) return heatmapData;
     
     const fallback = [];
-    const endDate = new Date();
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - 365);
     
@@ -74,6 +73,7 @@ const HeatmapCalendar = ({ heatmapData, currentStreak, bestStreak, username }) =
     <div className="heatmap-container">
       <div className="heatmap-header">
         <h2>Lịch hoạt động (52 tuần gần nhất)</h2>
+        {loading && <span className="heatmap-loading">Đang tải...</span>}
         <div className="streak-info">
           <div className="streak-item">
             <span className="streak-icon">🔥</span>

@@ -4,7 +4,7 @@ import { FiX, FiClock, FiUsers, FiZap } from 'react-icons/fi';
 import { io } from 'socket.io-client';
 import './BattleQueue.scss';
 
-const SERVER_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+const SERVER_URL = import.meta.env.VITE_SOCKET_URL || window.location.origin;
 
 const BattleQueue = () => {
   const navigate = useNavigate();
@@ -19,9 +19,16 @@ const BattleQueue = () => {
 
   const token = localStorage.getItem('accessToken') || localStorage.getItem('token') || '';
 
+  // Refs để socket setup effect giữ deps ổn định mà vẫn dùng navigate/token mới nhất.
+  // Sync qua useEffect (không gán ref.current trong render — react-hooks/refs cấm).
+  const navigateRef = useRef(navigate);
+  const tokenRef = useRef(token);
+  useEffect(() => { navigateRef.current = navigate; }, [navigate]);
+  useEffect(() => { tokenRef.current = token; }, [token]);
+
   useEffect(() => {
     const socket = io(`${SERVER_URL}/battle`, {
-      auth: { token },
+      auth: { token: tokenRef.current },
       transports: ['websocket', 'polling'],
     });
 
@@ -58,13 +65,13 @@ const BattleQueue = () => {
 
     socket.on('battle-start', () => {
       if (matchRoomIdRef.current) {
-        navigate(`/battle/${matchRoomIdRef.current}`);
+        navigateRef.current(`/battle/${matchRoomIdRef.current}`);
       }
     });
 
     socket.on('battle-error', ({ message }) => {
       alert(message);
-      navigate('/battle');
+      navigateRef.current('/battle');
     });
 
     socket.on('disconnect', () => {
@@ -76,6 +83,7 @@ const BattleQueue = () => {
       socket.emit('battle-leave-queue');
       socket.disconnect();
     };
+    // deps cố ý rỗng: socket chỉ setup 1 lần; navigate/token qua refs để luôn mới nhất
   }, []);
 
   const handleCancel = () => {

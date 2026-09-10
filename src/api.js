@@ -21,6 +21,23 @@ const buildUrl = (path, params) => {
   return url.toString();
 };
 
+export const parseResponseBody = async (response) => {
+  const contentType = response.headers.get('content-type') || '';
+  const text = await response.text();
+
+  if (!text) return contentType.includes('application/json') ? {} : '';
+
+  if (contentType.includes('application/json')) {
+    try {
+      return JSON.parse(text);
+    } catch {
+      throw new Error(`Server trả về JSON không hợp lệ (HTTP ${response.status}).`);
+    }
+  }
+
+  return text;
+};
+
 // ── Core request ───────────────────────────────────────────────────────
 const request = async (method, path, options = {}) => {
   const headers = {
@@ -66,10 +83,7 @@ const request = async (method, path, options = {}) => {
     }
   }
 
-  const contentType = response.headers.get('content-type') || '';
-  const data = contentType.includes('application/json')
-    ? await response.json()
-    : await response.text();
+  const data = await parseResponseBody(response);
 
   if (!response.ok) {
     const message = typeof data === 'object' ? data.message || data.error : data;
@@ -85,7 +99,7 @@ export const publicRequest = async (path, options = {}) => {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
   });
-  const data = await response.json();
+  const data = await parseResponseBody(response);
   if (!response.ok) {
     throw new Error(data.message || `Request failed with status ${response.status}`);
   }

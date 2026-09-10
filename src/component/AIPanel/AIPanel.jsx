@@ -2,7 +2,7 @@
 import { Rnd } from 'react-rnd';
 import { FiX, FiCpu, FiMessageSquare, FiZap, FiTool, FiSend, FiTrash2 } from 'react-icons/fi';
 import './AIPanel.scss';
-import API, { fetchRaw } from '../../api';
+import API, { fetchRaw, parseResponseBody } from '../../api';
 
 const getUserId = () => {
   try {
@@ -27,7 +27,6 @@ const AIPanel = ({ code, language, onClose }) => {
   const lastSavedKeyRef = useRef('');
 
   const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
-  const isAuth = Boolean(token);
 
   messagesRef.current = messages;
 
@@ -51,7 +50,7 @@ const AIPanel = ({ code, language, onClose }) => {
 
     setSaveStatus('saving');
     try {
-      const { data } = await API.post('ai/history', {
+      await API.post('ai/history', {
         type,
         question,
         answer,
@@ -66,7 +65,7 @@ const AIPanel = ({ code, language, onClose }) => {
       setTimeout(() => setSaveStatus(''), 3000);
       return false;
     }
-  }, [token, code, language]);
+  }, [token]);
 
   const flushPendingSave = useCallback(() => {
     const meta = streamMetaRef.current;
@@ -141,7 +140,7 @@ const AIPanel = ({ code, language, onClose }) => {
       if (!response.ok) {
         let errMsg = `Lỗi hệ thống: ${response.status}`;
         try {
-          const errData = await response.json();
+          const errData = await parseResponseBody(response);
           errMsg = errData.message || errMsg;
         } catch {
           // ignore

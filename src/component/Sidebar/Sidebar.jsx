@@ -34,7 +34,7 @@ const playBeep = () => {
     gainNode.gain.setValueAtTime(0.05, ctx.currentTime);
     osc.start();
     osc.stop(ctx.currentTime + 0.1);
-  } catch (e) {
+  } catch {
     // ignore
   }
 };

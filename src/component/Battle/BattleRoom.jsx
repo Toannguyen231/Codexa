@@ -1,13 +1,13 @@
-﻿import React, { useState, useRef, useEffect, useCallback } from 'react';
+﻿import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FiClock, FiSend, FiPlay, FiChevronDown, FiChevronUp, FiZap, FiUser, FiCheckCircle, FiXCircle, FiAlertTriangle } from 'react-icons/fi';
 import { io } from 'socket.io-client';
-import API, { fetchRaw } from '../../api';
+import API, { fetchRaw, parseResponseBody } from '../../api';
 import CodeEditor from '../Editor/CodeEditor';
 import LanguageSelector from '../Header/LanguageSelector';
 import './BattleRoom.scss';
 
-const SERVER_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+const SERVER_URL = import.meta.env.VITE_SOCKET_URL || window.location.origin;
 const DEFAULT_CODE = `#include <iostream>
 using namespace std;
 
@@ -28,7 +28,7 @@ const BattleRoom = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem('accessToken') || localStorage.getItem('token') || '';
 
-  // ── Core state ──
+  // -- Core state --
   const [problem, setProblem] = useState(null);
   const [fullProblem, setFullProblem] = useState(null); // Full details including test cases
   const [language, setLanguage] = useState('C++');
@@ -39,31 +39,31 @@ const BattleRoom = () => {
   const [startedAt, setStartedAt] = useState(null);
   const [countdown, setCountdown] = useState(0);
 
-  // ── Opponent ──
+  // -- Opponent --
   const [opponent, setOpponent] = useState(null);
   const [opponentStatus, setOpponentStatus] = useState('idle'); // idle | coding | submitted | ac
 
-  // ── Socket ──
+  // -- Socket --
   const socketRef = useRef(null);
   const submitCountRef = useRef(0);
   const typingTimeoutRef = useRef(null);
 
-  // ── IO panel ──
+  // -- IO panel --
   const [ioPanelOpen, setIoPanelOpen] = useState(true);
   const [customInput, setCustomInput] = useState('');
   const [output, setOutput] = useState('');
   const [outputLoading, setOutputLoading] = useState(false);
 
-  // ── Submit ──
+  // -- Submit --
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitResult, setSubmitResult] = useState(null); // { isAccepted, score }
   const [testResults, setTestResults] = useState([]);
   const [currentTestIndex, setCurrentTestIndex] = useState(-1);
 
-  // ── Kết thúc ──
+  // -- K?t thúc --
   const [finishedData, setFinishedData] = useState(null);
 
-  // ── Refs for latest values (avoid stale closures) ──
+  // -- Refs for latest values (avoid stale closures) --
   const codeRef = useRef(code);
   const languageRef = useRef(language);
   const statusRef = useRef(status);
@@ -76,7 +76,7 @@ const BattleRoom = () => {
   useEffect(() => { statusRef.current = status; }, [status]);
   // handleSubmitRef is updated via layout effect below
 
-  // ── Fetch full problem details ──
+  // -- Fetch full problem details --
   const fetchProblemDetails = async (contestId, index) => {
     try {
       const res = await API.get(`/problems/${contestId}/${index}`);
@@ -86,7 +86,7 @@ const BattleRoom = () => {
     }
   };
 
-  // ── Kết nối socket ──
+  // -- K?t n?i socket --
   useEffect(() => {
     if (!token || !roomId) return;
 
@@ -132,7 +132,7 @@ const BattleRoom = () => {
       }
     });
 
-    socket.on('battle-opponent-submitted', ({ submitCount, verdict }) => {
+    socket.on('battle-opponent-submitted', ({ verdict }) => {
       if (verdict === 'AC') {
         setOpponentStatus('ac');
       } else {
@@ -171,14 +171,14 @@ const BattleRoom = () => {
       socket.disconnect();
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     };
-  }, [roomId, token]);
+  }, [roomId, token, navigate]);
 
   // Keep handleSubmitRef current on every render
   useEffect(() => {
     handleSubmitRef.current = handleSubmit;
   });
 
-  // ── Timer ──
+  // -- Timer --
   useEffect(() => {
     if (status !== 'active' || !startedAt) return;
 
@@ -207,7 +207,7 @@ const BattleRoom = () => {
 
   const timerColor = timeLeft <= 300 ? '#ef4444' : timeLeft <= 600 ? '#f59e0b' : status === 'finished' ? '#64748b' : '#34d399';
 
-  // ── Typing Handler ──
+  // -- Typing Handler --
   const handleCodeChange = (newCode) => {
     setCode(newCode);
     if (status === 'active' && socketRef.current) {
@@ -219,7 +219,7 @@ const BattleRoom = () => {
     }
   };
 
-  // ── Chạy code ──
+  // -- Ch?y code --
   const handleRunCode = async () => {
     if (outputLoading || !code.trim()) return;
     setOutputLoading(true);
@@ -230,10 +230,10 @@ const BattleRoom = () => {
         method: 'POST',
         body: { language, code, stdin: customInput },
       });
-      const result = await res.json();
+      const result = await parseResponseBody(res);
 
       if (!res.ok) {
-        setOutput(result.message || 'Lỗi server');
+        setOutput(result.message || 'L?i server');
       } else if (result.compile_output) {
         setOutput(result.compile_output);
       } else {
@@ -242,7 +242,7 @@ const BattleRoom = () => {
         setOutput(stdout + (stderr ? `\n--- stderr ---\n${stderr}` : ''));
       }
     } catch (err) {
-      setOutput(`Lỗi: ${err.message}`);
+      setOutput(`L?i: ${err.message}`);
     } finally {
       setOutputLoading(false);
     }
@@ -284,7 +284,7 @@ const BattleRoom = () => {
           body: { language: currentLanguage, code: currentCode, stdin: test.input || '' },
         });
 
-        const result = await res.json();
+        const result = await parseResponseBody(res);
 
         let status = 'Failed';
         let actualOutput = '';
@@ -349,7 +349,7 @@ const BattleRoom = () => {
 
       if (!isAuto) {
         if (isAccepted) {
-          alert('✅ Bài làm đã được ghi nhận! Chờ đối thủ hoàn thành...');
+          alert('? Bài làm dã du?c ghi nh?n! Ch? d?i th? hoàn thành...');
         } else {
           // alert is a bit intrusive for quick battle typing, but keeping as requested/old logic
         }
@@ -362,12 +362,12 @@ const BattleRoom = () => {
     }
   };
 
-  // ── Render ──
+  // -- Render --
   if (status === 'loading') {
     return (
       <div className="battle-room-loading">
         <div className="loading-spinner"></div>
-        <p>Đang tải trận đấu...</p>
+        <p>Ðang t?i tr?n d?u...</p>
       </div>
     );
   }
@@ -376,7 +376,7 @@ const BattleRoom = () => {
     return (
       <div className="battle-room-countdown">
         <div className="countdown-content">
-          <h2>Trận đấu sắp bắt đầu!</h2>
+          <h2>Tr?n d?u s?p b?t d?u!</h2>
           <div className="countdown-number">{countdown}</div>
         </div>
       </div>
@@ -385,10 +385,10 @@ const BattleRoom = () => {
 
   return (
     <div className={`battle-room ${status === 'finished' ? 'finished' : ''}`}>
-      {/* ── Top Bar ── */}
+      {/* -- Top Bar -- */}
       <div className="battle-topbar">
         <button className="battle-back-btn" onClick={() => navigate('/battle')}>
-          ← Quay lại
+          ? Quay l?i
         </button>
 
         <div className="battle-problem-info">
@@ -410,33 +410,33 @@ const BattleRoom = () => {
           <FiUser />
           <span className="opponent-name">{opponent?.username || '???'}</span>
           <span className={`opponent-status ${opponentStatus}`}>
-            {opponentStatus === 'ac' ? '🏆 Đã AC' : opponentStatus === 'submitted' ? '📨 Đã submit' : opponentStatus === 'coding' ? '💻 Đang code' : '⏳ Chờ...'}
+            {opponentStatus === 'ac' ? '?? Ðã AC' : opponentStatus === 'submitted' ? '?? Ðã submit' : opponentStatus === 'coding' ? '?? Ðang code' : '? Ch?...'}
           </span>
         </div>
       </div>
 
-      {/* ── Main Content ── */}
+      {/* -- Main Content -- */}
       <div className="battle-main">
-        {/* ── Problem Statement ── */}
+        {/* -- Problem Statement -- */}
         <div className="battle-problem-panel">
           <div className="panel-header">
-            <h3>📝 Đề bài</h3>
+            <h3>?? Ð? bài</h3>
           </div>
           <div className="panel-body problem-statement">
             {fullProblem?.statementHtml || problem?.statementHtml ? (
               <div dangerouslySetInnerHTML={{ __html: fullProblem?.statementHtml || problem.statementHtml }} />
             ) : (
               <div className="problem-placeholder">
-                <p><strong>{problem?.name || 'Bài tập'}</strong></p>
+                <p><strong>{problem?.name || 'Bài t?p'}</strong></p>
                 {problem?.tags && <p className="problem-tags">Tags: {problem.tags.join(', ')}</p>}
                 {problem?.rating && <p>Rating: {problem.rating}</p>}
-                <p className="problem-hint">Đang tải đề bài...</p>
+                <p className="problem-hint">Ðang t?i d? bài...</p>
               </div>
             )}
           </div>
         </div>
 
-        {/* ── Code Panel ── */}
+        {/* -- Code Panel -- */}
         <div className="battle-code-panel">
           <div className="battle-editor-header">
             <LanguageSelector language={language} setLanguage={setLanguage} />
@@ -449,7 +449,7 @@ const BattleRoom = () => {
                 onClick={() => handleSubmit(false)}
                 disabled={submitLoading || status === 'finished'}
               >
-                <FiSend /> {submitLoading ? 'Đang chấm...' : 'Submit'}
+                <FiSend /> {submitLoading ? 'Ðang ch?m...' : 'Submit'}
               </button>
             </div>
           </div>
@@ -464,10 +464,10 @@ const BattleRoom = () => {
             />
           </div>
 
-          {/* ── Testing Progress Panel ── */}
+          {/* -- Testing Progress Panel -- */}
           {submitLoading && (
             <div className="battle-testing-progress">
-              <h4>Đang chấm bài...</h4>
+              <h4>Ðang ch?m bài...</h4>
               <div className="progress-bar">
                 <div
                   className="progress-fill"
@@ -478,10 +478,10 @@ const BattleRoom = () => {
             </div>
           )}
 
-          {/* ── Test Results Panel ── */}
+          {/* -- Test Results Panel -- */}
           {!submitLoading && testResults.length > 0 && (
             <div className="battle-test-results">
-              <h4>Kết quả Test Cases</h4>
+              <h4>K?t qu? Test Cases</h4>
               <div className="test-cases-list">
                 {testResults.map((tr, i) => (
                   <div key={i} className={`test-case-item ${tr.status === 'Passed' ? 'passed' : 'failed'}`}>
@@ -507,10 +507,10 @@ const BattleRoom = () => {
             </div>
           )}
 
-          {/* ── IO Panel ── */}
+          {/* -- IO Panel -- */}
           <div className="battle-io-panel">
             <div className="io-header" onClick={() => setIoPanelOpen(!ioPanelOpen)}>
-              <span>📟 Input / Output (Tự chọn)</span>
+              <span>?? Input / Output (T? ch?n)</span>
               {ioPanelOpen ? <FiChevronDown /> : <FiChevronUp />}
             </div>
 
@@ -521,58 +521,58 @@ const BattleRoom = () => {
                   <textarea
                     value={customInput}
                     onChange={(e) => setCustomInput(e.target.value)}
-                    placeholder="Nhập input tùy chỉnh..."
+                    placeholder="Nh?p input tùy ch?nh..."
                     rows={4}
                     disabled={status === 'finished'}
                   />
                 </div>
                 <div className="io-section">
                   <label>Output:</label>
-                  <pre className="io-output">{output || 'Chạy code để xem kết quả...'}</pre>
+                  <pre className="io-output">{output || 'Ch?y code d? xem k?t qu?...'}</pre>
                 </div>
               </div>
             )}
           </div>
 
-          {/* ── Submit Result ── */}
+          {/* -- Submit Result -- */}
           {submitResult !== null && (
             <div className={`submit-banner ${submitResult.isAccepted ? 'accepted' : 'failed'}`}>
               {submitResult.isAccepted ? (
-                <><FiCheckCircle /> ✅ AC! Chờ đối thủ hoàn thành... (Điểm: {submitResult.score})</>
+                <><FiCheckCircle /> ? AC! Ch? d?i th? hoàn thành... (Ði?m: {submitResult.score})</>
               ) : (
-                <><FiXCircle /> ❌ Chưa chính xác. Cố lên!</>
+                <><FiXCircle /> ? Chua chính xác. C? lên!</>
               )}
             </div>
           )}
         </div>
       </div>
 
-      {/* ── Finished Modal ── */}
+      {/* -- Finished Modal -- */}
       {status === 'finished' && finishedData && (
         <div className="battle-result-overlay">
           <div className="battle-result-card">
             <div className={`result-badge ${finishedData.winner ? (finishedData.winner === (mySide === 'player1' ? finishedData.player1.id : finishedData.player2.id) ? 'win' : 'lose') : 'draw'}`}>
               {finishedData.winner
                 ? (finishedData.winner === (mySide === 'player1' ? finishedData.player1.id : finishedData.player2.id)
-                  ? '🏆 CHIẾN THẮNG!'
-                  : '😞 THẤT BẠI')
-                : '🤝 HOÀ'}
+                  ? '?? CHI?N TH?NG!'
+                  : '?? TH?T B?I')
+                : '?? HOÀ'}
             </div>
 
             <div className="result-players">
               <div className="result-player">
-                <div className="result-player-name">Bạn</div>
+                <div className="result-player-name">B?n</div>
                 <div className="result-score">{mySide === 'player1' ? finishedData.player1.score : finishedData.player2.score}</div>
                 <div className={`result-verdict ${mySide === 'player1' ? (finishedData.player1.ac ? 'ac' : 'wa') : (finishedData.player2.ac ? 'ac' : 'wa')}`}>
-                  {mySide === 'player1' ? (finishedData.player1.ac ? '✅ AC' : '❌ WA') : (finishedData.player2.ac ? '✅ AC' : '❌ WA')}
+                  {mySide === 'player1' ? (finishedData.player1.ac ? '? AC' : '? WA') : (finishedData.player2.ac ? '? AC' : '? WA')}
                 </div>
               </div>
-              <span className="result-vs">⚔️</span>
+              <span className="result-vs">??</span>
               <div className="result-player">
                 <div className="result-player-name">{opponent?.username}</div>
                 <div className="result-score">{mySide === 'player1' ? finishedData.player2.score : finishedData.player1.score}</div>
                 <div className={`result-verdict ${mySide === 'player1' ? (finishedData.player2.ac ? 'ac' : 'wa') : (finishedData.player1.ac ? 'ac' : 'wa')}`}>
-                  {mySide === 'player1' ? (finishedData.player2.ac ? '✅ AC' : '❌ WA') : (finishedData.player1.ac ? '✅ AC' : '❌ WA')}
+                  {mySide === 'player1' ? (finishedData.player2.ac ? '? AC' : '? WA') : (finishedData.player1.ac ? '? AC' : '? WA')}
                 </div>
               </div>
             </div>
@@ -583,10 +583,10 @@ const BattleRoom = () => {
 
             <div className="result-actions">
               <button className="result-btn primary" onClick={() => navigate('/battle/queue')}>
-                <FiZap /> Đấu tiếp
+                <FiZap /> Ð?u ti?p
               </button>
               <button className="result-btn secondary" onClick={() => navigate('/battle')}>
-                ← Về Battle Hub
+                ? V? Battle Hub
               </button>
             </div>
           </div>
@@ -597,5 +597,7 @@ const BattleRoom = () => {
 };
 
 export default BattleRoom;
+
+
 
 

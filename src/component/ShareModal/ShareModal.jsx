@@ -12,7 +12,6 @@ const ShareModal = ({ onClose, code, language, roomId, title }) => {
   const [step, setStep] = useState('create');   // create | done | loading | error
   const [shareUrl, setShareUrl] = useState('');
   const [embedUrl, setEmbedUrl] = useState('');
-  const [shareId, setShareId] = useState('');
   const [customTitle, setCustomTitle] = useState(title || `Code ${new Date().toLocaleDateString('vi-VN')}`);
   const [expiresInHours, setExpiresInHours] = useState('');
   const [copied, setCopied] = useState('');
@@ -33,7 +32,6 @@ const ShareModal = ({ onClose, code, language, roomId, title }) => {
         expiresInHours: expiresInHours ? parseInt(expiresInHours, 10) : undefined,
       });
 
-      setShareId(res.data.shareId);
       setShareUrl(res.data.shareUrl);
       setEmbedUrl(res.data.embedUrl);
       setStep('done');

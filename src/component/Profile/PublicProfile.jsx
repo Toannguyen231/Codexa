@@ -27,22 +27,26 @@ const PublicProfile = () => {
   useEffect(() => {
     if (!userId) return;
 
-    setLoading(true);
-    setError('');
+    const timer = setTimeout(() => {
+      setLoading(true);
+      setError('');
 
-    API.get(`/users/${userId}/profile`)
-      .then(({ data }) => {
-        if (data.success) {
-          setProfileData(data);
-        } else {
-          setError('Không thể tải thông tin người dùng.');
-        }
-      })
-      .catch((err) => {
-        console.error('PublicProfile fetch error:', err);
-        setError(err.message || 'Không tìm thấy người dùng.');
-      })
-      .finally(() => setLoading(false));
+      API.get(`/users/${userId}/profile`)
+        .then(({ data }) => {
+          if (data.success) {
+            setProfileData(data);
+          } else {
+            setError('Không thể tải thông tin người dùng.');
+          }
+        })
+        .catch((err) => {
+          console.error('PublicProfile fetch error:', err);
+          setError(err.message || 'Không tìm thấy người dùng.');
+        })
+        .finally(() => setLoading(false));
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [userId]);
 
   if (loading) {
@@ -189,7 +193,7 @@ const PublicProfile = () => {
         {/* Battle Stats */}
         {battleStats.totalBattles > 0 && (
           <div className="pp-section">
-            <h2 className="pp-section-title">⚔️ Battle Stats</h2>
+            <h2 className="pp-section-title">⚠️ Battle Stats</h2>
             <div className="pp-battle-grid">
               <div className="pp-battle-item">
                 <span className="pp-battle-val win">{battleStats.wins || 0}</span>
@@ -247,3 +251,5 @@ const PublicProfile = () => {
 };
 
 export default PublicProfile;
+
+

@@ -41,7 +41,7 @@ function Typewriter({ text, speed = 40, startDelay = 500 }) {
   );
 }
 
-function AnimatedStat({ stat, index }) {
+function AnimatedStat({ stat }) {
   const ref = useRef(null);
   const [count, setCount] = useState(0);
   const [hasAnimated, setHasAnimated] = useState(false);
@@ -147,8 +147,8 @@ export default function Hero() {
             </MagneticButton>
           </div>
           <div className="stat-row reveal">
-            {STATS.map((s, i) => (
-              <AnimatedStat key={s.label} stat={s} index={i} />
+            {STATS.map((s) => (
+              <AnimatedStat key={s.label} stat={s} />
             ))}
           </div>
         </div>

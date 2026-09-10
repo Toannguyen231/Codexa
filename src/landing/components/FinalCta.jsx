@@ -7,7 +7,6 @@ export default function FinalCta() {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    let frames = [];
     function createParticle() {
       const p = document.createElement('div');
       p.style.cssText = `

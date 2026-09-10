@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Header.scss';
 import { FiPlay, FiShare2, FiCopy, FiCheck, FiChevronDown, FiLogOut, FiUser, FiClock, FiArrowLeft, FiHome } from 'react-icons/fi';
@@ -18,7 +18,7 @@ const readLocalUser = () => {
   catch { return {}; }
 };
 
-const Header = ({ onRun, isRunning, language, setLanguage, roomId, isConnected, onlineUsers = [], currentUser: _ignored, onOpenHistory, editorSettings, setEditorSettings, aiOpen, setAIOpen, onShare }) => {
+const Header = ({ onRun, isRunning, language, setLanguage, roomId, isConnected, onlineUsers = [], onOpenHistory, editorSettings, setEditorSettings, aiOpen, setAIOpen, onShare }) => {
   // ⚠️ KHÔNG dùng prop currentUser từ CodeApp vì không sync kịp khi đổi avatar.
   // Thay vào đó, đọc trực tiếp từ localStorage + subscribe events.
   const [localUser, setLocalUser] = useState(readLocalUser);

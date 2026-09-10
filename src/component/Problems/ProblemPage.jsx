@@ -22,10 +22,9 @@ import {
   buildProblemUrl,
   extractSamples,
   getDifficultyClass,
-  getProblemRoomPath,
   VERDICT_CONFIG,
 } from './problemUtils';
-import API, { fetchRaw } from '../../api';
+import API, { fetchRaw, parseResponseBody } from '../../api';
 import DailyRewardsPopup from '../Daily/DailyRewardsPopup.jsx';
 import AchievementToast from '../Achievements/AchievementToast.jsx';
 import '../Daily/DailyRewardsPopup.scss';
@@ -89,9 +88,6 @@ const ProblemPage = () => {
 
   const statementRef = useRef(null);
   const workspaceRef = useRef(null);
-  const token = localStorage.getItem('accessToken') || localStorage.getItem('token') || '';
-  const isAuth = Boolean(token);
-
   const problemUrl = useMemo(() => (problem ? buildProblemUrl(problem) : ''), [problem]);
 
   // ── Resizer Logic ──────────────────────────────────────────────────
@@ -167,6 +163,12 @@ const ProblemPage = () => {
       cancelled = true;
       controller.abort();
     };
+    // CỐ Ý không thêm `language` vào deps: nó chỉ dùng để build starter code LÚC LOAD bài.
+    // Nếu thêm, effect sẽ RELOAD toàn bộ problem từ server mỗi lần đổi ngôn ngữ
+    // (fetch + setLoading(true) → mất code đang gõ). Việc đổi ngôn ngữ đã được xử lý
+    // riêng trong handleLanguageChange() (setCode với starter mới), nên effect này
+    // không cần chạy lại theo language.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contestId, index]);
 
   // ── Typeset MathJax when statementHtml changes ─────────────────────
@@ -223,7 +225,7 @@ const ProblemPage = () => {
         body: { language, code, stdin: customInput },
       });
 
-      const result = await res.json();
+      const result = await parseResponseBody(res);
 
       if (!res.ok) {
         setOutput(result.message || 'Lỗi server.');
@@ -279,7 +281,7 @@ const ProblemPage = () => {
           body: { language, code, stdin: samples[i].input },
         });
 
-        const result = await res.json();
+        const result = await parseResponseBody(res);
 
         let status = 'Error';
         let actualOutput = '';

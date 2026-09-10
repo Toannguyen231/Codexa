@@ -802,18 +802,21 @@ const Settings = () => {
       <div className="settings-body">
         <nav className={`settings-sidebar ${mobileSidebarOpen ? 'open' : ''}`}>
           <div className="settings-sidebar-inner">
-            {SECTIONS.map(({ id, label, icon: Icon }) => (
-              <button
-                key={id}
-                className={`settings-nav-item ${activeSection === id ? 'active' : ''}`}
-                onClick={() => handleSectionChange(id)}
-                id={`settings-nav-${id}`}
-              >
-                <Icon size={16} />
-                <span>{label}</span>
-                {activeSection === id && <div className="nav-active-indicator" />}
-              </button>
-            ))}
+            {SECTIONS.map((section) => {
+              const SectionIcon = section.icon;
+              return (
+                <button
+                  key={section.id}
+                  className={`settings-nav-item ${activeSection === section.id ? 'active' : ''}`}
+                  onClick={() => handleSectionChange(section.id)}
+                  id={`settings-nav-${section.id}`}
+                >
+                  <SectionIcon size={16} />
+                  <span>{section.label}</span>
+                  {activeSection === section.id && <div className="nav-active-indicator" />}
+                </button>
+              );
+            })}
           </div>
         </nav>
 

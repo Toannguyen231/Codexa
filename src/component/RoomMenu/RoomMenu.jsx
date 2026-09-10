@@ -12,7 +12,18 @@ import '../Daily/DailyChallengeCard.scss';
 import UserSearch from '../UserSearch/UserSearch.jsx';
 import { useSettings } from '../../contexts/SettingsContext.jsx';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
+
+const parseJsonResponse = async (res) => {
+  const text = await res.text();
+  if (!text) return {};
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(`Server trả về dữ liệu không hợp lệ (HTTP ${res.status}).`);
+  }
+};
 
 const timeAgo = (dateStr) => {
   const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
@@ -83,7 +94,7 @@ const RoomMenu = () => {
         headers: { Authorization: 'Bearer ' + token },
       });
       if (!res.ok) throw new Error('Lỗi tải danh sách phòng');
-      const data = await res.json();
+      const data = await parseJsonResponse(res);
       setRooms(data.rooms || []);
       let users = 0;
       (data.rooms || []).forEach(r => { users += (r.participantCount || 0); });
@@ -132,7 +143,8 @@ const RoomMenu = () => {
           language: settings?.defaultLanguage || 'C++',
         }),
       });
-      const data = await res.json();
+      const data = await parseJsonResponse(res);
+      if (!res.ok) throw new Error(data.message || 'Không thể tạo phòng.');
       if (data.room) {
         navigate('/room/' + data.room.roomId);
       }
@@ -158,12 +170,14 @@ const RoomMenu = () => {
         },
         body: JSON.stringify({ password: '' }),
       });
-      const data = await res.json();
+      const data = await parseJsonResponse(res);
       if (data.verified) {
         navigate('/room/' + roomId);
         return;
       }
-    } catch { }
+    } catch {
+      // Private rooms fall back to asking for a password.
+    }
     setPendingRoomId(roomId);
     setPendingRoomName(roomName || roomId);
     setRoomPassword('');
@@ -184,7 +198,7 @@ const RoomMenu = () => {
         },
         body: JSON.stringify({ password: roomPassword }),
       });
-      const data = await res.json();
+      const data = await parseJsonResponse(res);
       if (data.verified) {
         setShowPasswordModal(false);
         navigate('/room/' + pendingRoomId);
@@ -210,12 +224,14 @@ const RoomMenu = () => {
         },
         body: JSON.stringify({ password: '' }),
       });
-      const data = await res.json();
+      const data = await parseJsonResponse(res);
       if (data.verified) {
         navigate('/room/' + id);
         return;
       }
-    } catch { }
+    } catch {
+      // Unknown/private room ids fall back to the password prompt.
+    }
     setPendingRoomId(id);
     setPendingRoomName(id);
     setRoomPassword('');

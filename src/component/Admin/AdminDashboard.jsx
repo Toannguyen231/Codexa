@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   FiArrowLeft, FiUsers, FiCpu, FiCode, FiSearch,
@@ -7,9 +7,10 @@ import {
   FiActivity, FiServer, FiZap, FiBarChart2, FiDatabase
 } from 'react-icons/fi';
 import { getRankImage } from '../../utils/rankImages';
+import API from '../../api';
 import './AdminDashboard.scss';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -95,18 +96,21 @@ const AdminDashboard = () => {
   const [successAlert, setSuccessAlert] = useState('');
   const [errorAlert, setErrorAlert] = useState('');
 
-  // API Request Helper
+  // API Request Helper via centralized API client (handles auto-refresh & token errors)
   const apiCall = useCallback(async (url, options = {}) => {
-    const headers = {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-      ...options.headers,
-    };
-    const res = await fetch(`${API_URL}${url}`, { ...options, headers });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || `API Error: ${res.status}`);
+    const cleanUrl = url.startsWith('/') ? url.slice(1) : url;
+    const method = (options.method || 'GET').toLowerCase();
+    let body = options.body;
+    if (body && typeof body === 'string') {
+      try { body = JSON.parse(body); } catch { /* keep as is */ }
+    }
+
+    const { data } = await API[method](cleanUrl, {
+      body,
+      headers: options.headers,
+    });
     return data;
-  }, [token]);
+  }, []);
 
   // Alert dismisser
   useEffect(() => {
@@ -130,7 +134,6 @@ const AdminDashboard = () => {
       const data = await apiCall('/admin/stats');
       setStats(data.stats);
       // Generate mock activity from stats
-      const now = new Date();
       const mockActivities = [
         { id: 1, type: 'user', text: <><strong>{data.stats?.recentUsers?.[0]?.username || 'Người dùng mới'}</strong> đã đăng ký tài khoản</>, time: '2 phút trước' },
         { id: 2, type: 'room', text: <>Phòng <strong>Code Battle #142</strong> đã được tạo</>, time: '15 phút trước' },
@@ -201,39 +204,65 @@ const AdminDashboard = () => {
     }
   }, [apiCall]);
 
-  // Switch Tab effects
+  // Refs luôn trỏ tới fetch mới nhất (tránh stale closure trong debounce effect
+  // mà KHÔNG cần đưa fetchUsers/fetchProblems vào deps — nếu đưa vào, effect sẽ
+  // chạy lại vô hạn vì chúng thay đổi theo usersPage/problemsPage khi setPage(1)).
+  // Sync qua useEffect vì react-hooks/refs cấm gán ref.current trong render.
+  const fetchUsersRef = useRef(fetchUsers);
+  const fetchProblemsRef = useRef(fetchProblems);
+  useEffect(() => { fetchUsersRef.current = fetchUsers; }, [fetchUsers]);
+  useEffect(() => { fetchProblemsRef.current = fetchProblems; }, [fetchProblems]);
+
+  // Switch Tab & Pagination effects
   useEffect(() => {
     if (activeTab === 'overview') {
       fetchOverviewStats();
-    } else if (activeTab === 'users') {
-      fetchUsers();
-    } else if (activeTab === 'problems') {
-      fetchProblems();
     } else if (activeTab === 'rooms') {
       fetchRooms();
     }
-  }, [activeTab, fetchOverviewStats, fetchUsers, fetchProblems, fetchRooms]);
+  }, [activeTab, fetchOverviewStats, fetchRooms]);
 
-  // Trigger search with debounce for User & Problem search
   useEffect(() => {
     if (activeTab === 'users') {
-      const timer = setTimeout(() => {
-        setUsersPage(1);
-        fetchUsers();
-      }, 400);
-      return () => clearTimeout(timer);
+      fetchUsersRef.current();
     }
-  }, [usersSearch, usersRole]);
+  }, [activeTab, usersPage]);
 
   useEffect(() => {
     if (activeTab === 'problems') {
-      const timer = setTimeout(() => {
-        setProblemsPage(1);
-        fetchProblems();
-      }, 400);
-      return () => clearTimeout(timer);
+      fetchProblemsRef.current();
     }
-  }, [problemsSearch, problemsDifficulty]);
+  }, [activeTab, problemsPage]);
+
+  // Trigger search with debounce for User & Problem search
+  // activeTab trong deps để khi rời tab, timer được clear đúng cách.
+  useEffect(() => {
+    if (activeTab !== 'users') return;
+    const timer = setTimeout(() => {
+      setUsersPage((prevPage) => {
+        if (prevPage === 1) {
+          fetchUsersRef.current();
+          return 1;
+        }
+        return 1;
+      });
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [usersSearch, usersRole, activeTab]);
+
+  useEffect(() => {
+    if (activeTab !== 'problems') return;
+    const timer = setTimeout(() => {
+      setProblemsPage((prevPage) => {
+        if (prevPage === 1) {
+          fetchProblemsRef.current();
+          return 1;
+        }
+        return 1;
+      });
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [problemsSearch, problemsDifficulty, activeTab]);
 
   // ── User Edit / Delete ──
   const handleEditUserClick = (u) => {
@@ -337,7 +366,7 @@ const AdminDashboard = () => {
     setTestcaseLoading(true);
     setTestcaseMessage('');
     try {
-      const data = await apiCall(`/admin/problems/${selectedProblem.contestId}/${selectedProblem.index}/testcases`, {
+      await apiCall(`/admin/problems/${selectedProblem.contestId}/${selectedProblem.index}/testcases`, {
         method: 'PUT',
         body: JSON.stringify({ testcases })
       });
@@ -1135,6 +1164,4 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
-
-
 

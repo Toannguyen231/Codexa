@@ -264,7 +264,7 @@ const Profile = () => {
             heatmapData={activityData?.heatmapData || []}
             currentStreak={activityData?.currentStreak || 0}
             bestStreak={activityData?.bestStreak || 0}
-            username={user?.username || ''}
+            loading={loadingActivity}
           />
         </div>
       </div>

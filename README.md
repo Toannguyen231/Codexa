@@ -1,570 +1,158 @@
 <div align="center">
 
-# 🚀 CodeRoom - Real-Time Collaborative Code Editor
+# ⚡ CodeRoom - Real-Time Collaborative Coding & Battle Arena
 
-### Transform How Teams Code Together
+### Nền tảng lập trình cộng tác thời gian thực, đấu trường thi đấu thuật toán 1v1 và trợ lý AI thông minh
 
-[![Live Demo](https://img.shields.io/badge/🌐%20Live%20Demo-coderoom.vercel.app-6366f1?style=for-the-badge)](https://coderoom.vercel.app/)
-[![Status](https://img.shields.io/badge/status-Production%20Ready-brightgreen?style=for-the-badge)]()
-[![License](https://img.shields.io/badge/license-MIT-blue?style=for-the-badge)]()
-[![GitHub Stars](https://img.shields.io/badge/⭐-21%20Stars-yellow?style=for-the-badge)]()
+[![React 19](https://img.shields.io/badge/React-19.2.4-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-8.0.1-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Monaco Editor](https://img.shields.io/badge/Monaco_Editor-VS_Code_Engine-007ACC?style=for-the-badge&logo=visual-studio-code&logoColor=white)](https://microsoft.github.io/monaco-editor/)
+[![Socket.IO Client](https://img.shields.io/badge/Socket.io-4.8.3-010101?style=for-the-badge&logo=socket.io&logoColor=white)](https://socket.io/)
+[![Bootstrap 5](https://img.shields.io/badge/Bootstrap-5.3.8-7952B3?style=for-the-badge&logo=bootstrap&logoColor=white)](https://getbootstrap.com/)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 
-**The next-generation collaborative coding platform where teams code together in real-time, powered by AI.**
+<br />
+
+[🌐 Trải Nghiệm Demo Trực Tuyến](https://coderoom.vercel.app/) • [✨ Tính Năng](#-tính-năng-nổi-bật) • [🏗️ Kiến Trúc](#-kiến-trúc-frontend) • [🚀 Cài Đặt](#-cài-đặt--phát-triển)
 
 ---
-
-### ⚡ [Try CodeRoom Now →](https://coderoom.vercel.app/)
-
-*No downloads. No plugins. Just open a link and start coding with your team.*
 
 </div>
 
----
+## 📌 Giới Thiệu
 
-## 🎯 Why CodeRoom?
+**CodeRoom Frontend** là ứng dụng Single Page Application (SPA) hiện đại được xây dựng trên nền tảng **React 19** và **Vite 8**, mang lại trải nghiệm lập trình mượt mà, tức thì và đầy cảm hứng:
 
-### The Problem
-- Screen-sharing is laggy and insecure
-- Turn-based coding kills productivity  
-- Setting up dev environments takes hours
-- Pair programming feels disconnected
-- Code testing requires multiple tool switches
-
-### The Solution
-CodeRoom eliminates these friction points with **seamless real-time collaboration, instant code execution, and AI-powered assistance** — all in one browser tab.
+- 💻 **Trình soạn thảo Monaco Editor** tương tự VS Code với đầy đủ tính năng IntelliSense, auto-complete và tuỳ biến giao diện.
+- 🔄 **Đồng bộ thời gian thực siêu tốc (<50ms)**: Hợp tác viết code cùng đồng đội mượt mà, theo dõi con trỏ và danh sách thành viên online.
+- ⚔️ **Đấu trường 1v1 (Battle Code)**: Tìm trận ngẫu nhiên (Matchmaking) theo trình độ hoặc gửi lời thách đấu trực tiếp, thi đấu thuật toán căng thẳng trong 30 phút.
+- 🤖 **Trợ lý AI đa năng**: Tích hợp Google Gemini 2.0 Flash & DeepSeek stream phản hồi trực tiếp (SSE), giải thích thuật toán, tìm lỗi biên dịch và tối ưu code.
+- 🏆 **Gamification & Thống kê**: 7 bậc xếp hạng (Sắt $\rightarrow$ Thách Đấu), chuỗi giải bài mỗi ngày (Daily Streak) và biểu đồ đóng góp (Activity Heatmap).
 
 ---
 
-## ✨ What Makes CodeRoom Special
+## ✨ Tính Năng Nổi Bật
 
-### 🔄 **Real-Time Synchronized Coding**
-Every keystroke syncs instantly across all participants. Watch your team's cursors move in real-time like a living document. See exactly where each teammate is working at all times.
+### 1. 👥 Không Gian Lập Trình Cộng Tác (Collaborative Room)
+- **Monaco Editor Engine**: Trình biên tập code mạnh mẽ nhất trên web, hỗ trợ 7 ngôn ngữ lập trình (C++, Python, Java, JavaScript, TypeScript, C#, PHP).
+- **Đồng bộ thông minh (Conflict-free Sync)**: Cơ chế debounce 300ms kết hợp flag `isRemoteChange` ngăn chặn hiện tượng lặp vô hạn và giảm tải băng thông.
+- **Presence Bar & Cursor Tracking**: Hiển thị vị trí con trỏ chuột và màu sắc đại diện cho từng người dùng trong phòng.
+- **Phiên bản mã nguồn (Version Snapshot)**: Tự động lưu tối đa 20 bản snapshot của code, dễ dàng khôi phục phiên bản trước đó.
+- **Live Chat & Snippet Sharing**: Khung chat trực tiếp trong phòng giúp trao đổi thảo luận liền mạch mà không cần dùng ứng dụng thứ ba.
 
-### 💻 **7 Languages, Zero Setup**
-Write and execute code instantly across multiple programming languages:
+### 2. ⚔️ Đấu Trường Đối Kháng 1v1 (Battle Arena)
+- **Hàng đợi tìm trận (Quick Match Queue)**: Ghép đối thủ tự động qua Socket.IO namespace `/battle` theo điểm ELO và bậc rank.
+- **Thách đấu trực tiếp (Direct Invite)**: Gửi lời mời thách đấu tới đối thủ qua username.
+- **Phòng thi đấu trực tiếp (Battle Room)**:
+  - Đồng hồ đếm ngược 30 phút.
+  - Hiển thị song song đề bài, trình soạn thảo Monaco và bảng trạng thái đối thủ.
+  - Chấm điểm bài giải trực tiếp theo test case mẫu và test case ẩn.
+- **Lịch sử giác đấu**: Theo dõi kết quả các trận thắng/thua, phân tích phong độ và biến động điểm xếp hạng.
+
+### 3. 🤖 Trợ Lý AI Hỗ Trợ Lập Trình
+- **Server-Sent Events (SSE) Streaming**: Phản hồi tức thì dạng gõ chữ thời gian thực từ Gemini 2.0 Flash / DeepSeek.
+- **4 Chế độ thông minh**:
+  - 📖 **Giải thích code (Explain)**: Phân tích cú pháp, luồng thuật toán và độ phức tạp tính toán $O(N)$.
+  - 🐛 **Sửa lỗi (Fix Bug)**: Nhận diện lỗi cú pháp, runtime error kèm giải thích và mã nguồn đã sửa.
+  - ⚙️ **Tối ưu hóa (Optimize)**: Đề xuất cách viết ngắn gọn, tiết kiệm bộ nhớ và nâng cao hiệu năng.
+  - 💬 **Hỏi đáp tự do (Chat)**: Trả lời mọi câu hỏi kỹ thuật về bài toán hoặc dự án.
+
+### 4. 📋 Giải Đề Codeforces & Chấm Điểm
+- **Đề bài Codeforces trực quan**: Tự động hiển thị nội dung đề bài, render công thức toán học sắc nét bằng MathJax.
+- **Hệ thống Test Case Ẩn do AI sinh**: Chấm điểm toàn diện qua cả test case mẫu và các bộ test case ẩn (Easy: 3, Medium: 5, Hard: 8 test) do AI tự động tạo.
+- **Báo cáo kết quả trực quan**: Hiển thị trạng thái chi tiết (Accepted, Wrong Answer, Time Limit Exceeded, Runtime Error).
+
+### 5. 🏆 Hồ Sơ Cá Nhân & Bảng Xếp Hạng
+- **Hệ thống Rank 7 bậc**: Sắt, Đồng, Bạc, Vàng, Bạch Kim, Kim Cương, Cao Thủ.
+- **Chuỗi Thử Thách Hàng Ngày (Daily Streak)**: Khám phá bài tập mới mỗi ngày, tích lũy chuỗi giải bài liên tục để nhận huy hiệu độc quyền.
+- **Activity Heatmap**: Biểu đồ nhiệt hiển thị lịch sử giải bài tương tự GitHub contribution graph.
+- **Bảng xếp hạng toàn cầu**: Xem thứ hạng top cao thủ và so sánh trình độ với các đối thủ liền kề.
+
+### 6. 👨‍💼 Quản Trị Hệ Thống (Admin Dashboard)
+- Thống kê thời gian thực về lượng người dùng, phòng code và lượt giải bài.
+- Công cụ cào đề bài hàng loạt từ Codeforces.
+- Quản lý danh sách tài khoản và phân quyền người dùng.
+
+---
+
+## 🏗️ Kiến Trúc Frontend
 
 ```
-C++ • Python • Java • JavaScript • TypeScript • C# • PHP
+app_code_realTime/
+├── src/
+│   ├── component/
+│   │   ├── Admin/               # Quản trị hệ thống (AdminDashboard.jsx)
+│   │   ├── Battle/              # Đấu trường 1v1 (BattleHub, BattleQueue, BattleRoom)
+│   │   ├── Editor/              # Monaco Editor & Code Execution Panel
+│   │   ├── AIPanel/             # Giao diện trợ lý AI (SSE streaming chat)
+│   │   ├── Problems/            # Danh sách bài tập & ProblemPage (MathJax + Judge)
+│   │   ├── Profile/             # Profile cá nhân, PublicProfile & Activity Heatmap
+│   │   ├── RoomMenu/            # Danh sách và quản lý phòng code
+│   │   ├── Login/               # Đăng nhập & Đăng ký
+│   │   └── AuthPages.jsx        # Quên mật khẩu & Xác thực email
+│   ├── hooks/                   # Custom Hooks: useSocket, useAuth
+│   ├── landing/                 # Landing Page giới thiệu hiện đại
+│   ├── monaco/                  # Cấu hình chủ đề (theme) & phím tắt Monaco
+│   ├── services/ & utils/       # Gọi REST API (Axios / Fetch) & Socket helper
+│   ├── App.jsx                  # Thiết lập định tuyến React Router v7
+│   └── CodeApp.jsx              # Workspace phòng code cộng tác trung tâm
+├── index.html
+├── vite.config.js
+└── package.json
 ```
 
-No Docker. No environment variables. Just code and run.
-
-### 🤖 **AI Code Assistant (Google Gemini 2.5)**
-Select any code snippet and ask AI to:
-- 📖 **Explain** — Break down complex logic step-by-step
-- 🐛 **Fix Bugs** — Identify errors with detailed corrections
-- ⚙️ **Optimize** — Improve performance and readability
-- 💬 **Chat** — Ask questions about your entire codebase
-
-### 🏁 **Smart Test Case System**
-- **Automatic Test Generation** — AI generates hidden test cases for practice problems
-- **Hidden Test Display** — Secure validation without revealing test inputs
-- **Intelligent Caching** — 10x faster on second runs
-- **Multi-Key Fallback** — Never runs out of API quota
-
-### 🏆 **Gamified Ranking System**
-Compete globally with an intelligent ranking system:
-- **7 Tier System** — Iron, Bronze, Silver, Gold, Platinum, Diamond, Master
-- **Point-Based Progression** — Easy (50pts), Medium (100pts), Hard (200pts)
-- **Global Leaderboard** — Real-time rankings with 1000+ concurrent users
-- **Personal Statistics** — Track progress: problems solved, success rate, points earned
-- **Rank Badges** — Color-coded tiers with visual indicators
-- **Automatic Scoring** — Points awarded only on accepted solutions
-- **Profile Integration** — Display rank and stats on user profile
-
-### 📊 **Version Control Built-In**
-Save up to 20 code snapshots per session. Restore any previous version instantly — lightweight version control without learning Git.
-
-### 🎨 **Professional Editor**
-- Monaco Editor (same engine as VS Code)
-- 5+ themes (Dark, Light, High Contrast, Monokai)
-- Full syntax highlighting for all languages
-- IntelliSense & auto-completion
-- Minimap for large files
-
-### 💬 **Integrated Chat**
-Text-based communication right in the sidebar. No need to switch between Discord, Slack, and your code editor.
-
-### 🔐 **Enterprise Security**
-- JWT-based authentication
-- Password-protected rooms
-- Bcrypt-hashed credentials
-- Secure WebSocket connections
-- Rate limiting & DDoS protection
-
 ---
 
-## 📊 Platform Comparison
+## 🚀 Cài Đặt & Phát Triển
 
-| Feature | CodeRoom | VSCode LiveShare | Replit | HackerRank |
-|---------|----------|-----------------|--------|-----------|
-| Real-Time Sync | ✅ | ✅ | ✅ | ✅ |
-| Multi-Language Execution | ✅ | ❌ | ✅ | ✅ |
-| AI Code Assistant | ✅ | ❌ | ✅ | ❌ |
-| **Gamified Ranking** | **✅** | **❌** | ✅ | ✅ |
-| **Leaderboard** | **✅** | **❌** | ✅ | ✅ |
-| **Cost** | **Free** | Free | $7-29/mo | $150+/mo |
-| **Latency** | **<50ms** | <100ms | ~200ms | ~500ms |
-| Test Case System | ✅ | ❌ | ✅ | ✅ |
-| No Installation | ✅ | ❌ | ✅ | ✅ |
-| Open Source | ✅ | ❌ | ❌ | ❌ |
+### 1. Yêu cầu môi trường
+- **Node.js**: Phiên bản `20.x` trở lên
+- **npm**: Phiên bản `10.x` trở lên
 
----
-
-## 🎬 Quick Start
-
-### For Users
+### 2. Cài đặt các gói phụ thuộc
 ```bash
-1. Visit: https://coderoom.vercel.app/
-2. Click "Create Room"
-3. Share the link with teammates
-4. Start coding together!
-```
-
-### For Developers
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/coderoom.git
-cd coderoom
-
-# Frontend setup
 cd app_code_realTime
 npm install
-npm run dev
-
-# Backend setup (in new terminal)
-cd severApp
-npm install
-npm run dev
-
-# MongoDB setup
-docker run -d -p 27017:27017 mongo:7
 ```
 
-**Full setup guide:** See [QUICK_DEPLOY.md](./QUICK_DEPLOY.md)
+### 3. Cấu hình biến môi trường
+Tạo file `.env.local` tại thư mục gốc của frontend:
 
----
+```env
+# URL trỏ tới Backend API
+VITE_API_BASE_URL=http://localhost:5000/api
 
-## 🏗️ Architecture Overview
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                    FRONTEND (React)                     │
-│          Vercel Deployment | Real-Time UI               │
-└────────────────────┬────────────────────────────────────┘
-                     │ REST API + WebSocket
-┌────────────────────▼────────────────────────────────────┐
-│                  BACKEND (Express)                      │
-│    Railway Deployment | Socket.IO Sync Engine            │
-├────────────────────┬────────────────────────────────────┤
-│  API Routes        │  WebSocket Handlers                │
-│  - Auth            │  - Code Sync                       │
-│  - Rooms           │  - Cursor Sync                     │
-│  - Problems        │  - Language Sync                   │
-│  - Execution       │  - Chat Messages                   │
-└────────────────────┼────────────────────────────────────┘
-                     │ MongoDB Driver
-┌────────────────────▼────────────────────────────────────┐
-│              DATABASE (MongoDB Atlas)                   │
-│         Users | Rooms | Code History | Chat             │
-└─────────────────────────────────────────────────────────┘
-                     │
-┌────────────────────▼────────────────────────────────────┐
-│          EXTERNAL SERVICES                              │
-│  - Google Gemini 2.5 (AI Assistant)                    │
-│  - Wandbox API (Code Execution)                         │
-│  - JWT Auth                                             │
-└─────────────────────────────────────────────────────────┘
+# URL kết nối WebSocket Socket.IO
+VITE_SOCKET_URL=http://localhost:5000
 ```
 
----
-
-## 🛠️ Tech Stack
-
-### Frontend
-- **React 19** — Modern UI library with hooks
-- **Vite 8** — Lightning-fast build tool
-- **Monaco Editor** — Professional code editor (VS Code engine)
-- **Socket.IO Client** — Real-time WebSocket library
-- **SCSS** — Advanced styling
-- **React Router 7** — Client-side routing
-
-### Backend
-- **Node.js + Express 5** — Robust REST API
-- **Socket.IO 4** — Real-time bidirectional events
-- **MongoDB + Mongoose** — Document database
-- **JWT + bcrypt** — Secure authentication
-- **Streaming (SSE)** — AI response streaming
-
-### AI & Execution
-- **Google Gemini 2.5 Flash** — Advanced language model
-- **Wandbox API** — Multi-language code execution
-- **OpenAI API** (optional) — Alternative AI backend
-
-### DevOps & Deployment
-- **Docker** — Container orchestration
-- **GitHub Actions** — CI/CD pipeline
-- **Vercel** — Frontend hosting (Auto-deploy from Git)
-- **Railway** — Backend hosting
-- **MongoDB Atlas** — Database hosting
-
----
-
-## 📈 Key Metrics
-
-| Metric | Value |
-|--------|-------|
-| Real-Time Sync Latency | <50ms |
-| Supported Languages | 7 |
-| Max Room Capacity | 50 users |
-| Code Submission Size | 1MB |
-| History Snapshots | 20 per room |
-| API Requests/sec | 1000+ |
-| Uptime | 99.9% |
-| **Ranking Tiers** | **7 levels** |
-| **Points per Problem** | **50-200 pts** |
-| **Max Points** | **Unlimited** |
-
----
-
-## 📁 Project Structure
-
-```
-Project_code_realTime/
-├── app_code_realTime/              # Frontend Application
-│   ├── src/
-│   │   ├── component/              # React Components
-│   │   │   ├── Login/
-│   │   │   ├── RoomMenu/
-│   │   │   ├── CodeEditor/
-│   │   │   ├── AIPanel/
-│   │   │   ├── Leaderboard/        # 🆕 Ranking leaderboard
-│   │   │   ├── Profile/            # 📊 Updated with rank stats
-│   │   │   └── ...
-│   │   ├── hooks/
-│   │   ├── styles/
-│   │   └── App.jsx
-│   ├── package.json
-│   ├── vite.config.js
-│   └── Dockerfile
-│
-├── severApp/                       # Backend API
-│   ├── index.js                    # Express server
-│   ├── routes/
-│   │   ├── auth.js
-│   │   ├── rooms.js
-│   │   ├── problems.js
-│   │   ├── leaderboard.js          # 🆕 Ranking routes
-│   │   └── ...
-│   ├── models/
-│   │   ├── User.js
-│   │   ├── Room.js
-│   │   ├── ProblemSolving.js       # 🆕 Track problem solutions
-│   │   └── ...
-│   ├── services/
-│   │   ├── scoringService.js       # 🆕 Points calculation
-│   │   └── ...
-│   ├── middleware/
-│   ├── package.json
-│   └── Dockerfile
-│
-├── docker-compose.yml              # Local development
-├── DEPLOYMENT_GUIDE.md             # Detailed deployment
-├── SCORING_SYSTEM_GUIDE.md         # 🆕 Ranking system docs
-├── QUICK_DEPLOY.md                 # Quick reference
-└── README.md                       # This file
-```
-
----
-
-## 🎮 How to Use CodeRoom
-
-### Create or Join a Coding Session
-
-1. **Login/Register** — Sign up with email or login
-2. **Create Room** — Click "Create Room" to start a session
-3. **Share Link** — Invite teammates by sharing the room link
-4. **Collaborate** — Start coding in real-time
-
-### Solve Practice Problems & Gain Rank
-
-1. **Browse Problems** — Go to `/problems` to see Codeforces problems
-2. **Select Difficulty** — Filter by Easy, Medium, or Hard
-3. **Write Solution** — Use the Monaco Editor to code
-4. **Run Tests** — Test against sample + hidden test cases
-5. **Submit** — Submit your solution
-6. **Earn Points** — Get points only if solution is accepted
-7. **Check Ranking** — Visit `/leaderboard` to see your global rank
-
-### Track Your Progress
-
-- **Profile Page** — View your rank tier, total points, and statistics
-- **Leaderboard** — See where you rank among all users worldwide
-- **Statistics** — Track problems solved by difficulty (Easy/Medium/Hard)
-
----
-
-## 🚀 Deployment
-
-### One-Click Deployment
-
-**Frontend (Vercel)**
+### 4. Khởi chạy môi trường phát triển (Dev Server)
 ```bash
-git push origin main
-# Vercel auto-deploys on push
-```
-
-**Backend (Railway)**
-```bash
-# Connect your GitHub repo to Railway
-# Auto-deploys on every commit
-```
-
-**Full Guide:** [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)
-
----
-
-## 🎓 Use Cases
-
-### 👨‍💻 **For Developers**
-- Pair programming without screen-sharing
-- Code reviews with real-time discussion
-- Mentoring and teaching programming
-- Remote technical interviews
-
-### 🏫 **For Educators**
-- Live coding classes and workshops
-- AI-powered homework grading
-- Student-teacher collaboration
-- Automatic test case validation
-
-### 💼 **For Companies**
-- Distributed team coding sessions
-- Quick code interviews
-- Knowledge transfer sessions
-- Collaborative debugging
-
-### 🎯 **For Competitive Programmers**
-- Contest preparation with teammates
-- Skill assessment with hidden test cases
-- Real-time practice sessions
-- Performance benchmarking
-
----
-
-## 🏆 Ranking System Features
-
-### 7-Tier Ranking System
-
-CodeRoom uses a competitive ranking system with 7 distinct tiers:
-
-```
-👑 Thách Đấu (Master)        ← 12,001+ Points
-💎 Kim Cương (Diamond)       ← 8,001 - 12,000 Points
-💜 Tinh Anh (Platinum)       ← 5,001 - 8,000 Points
-🥇 Vàng (Gold)               ← 3,001 - 5,000 Points
-🥈 Bạc (Silver)              ← 1,501 - 3,000 Points
-🥉 Đồng (Bronze)             ← 501 - 1,500 Points
-⚔️  Sắt (Iron)               ← 0 - 500 Points
-```
-
-### Point System
-
-| Difficulty | Points | Use Case |
-|------------|--------|----------|
-| **Easy** | 50 pts | Warm-up problems, basic algorithms |
-| **Medium** | 100 pts | Intermediate challenges, logic puzzles |
-| **Hard** | 200 pts | Advanced problems, optimization |
-
-### Key Features
-
-- **Global Leaderboard** — View top 100 competitors worldwide
-- **Personal Dashboard** — Track your rank, points, and progress
-- **Statistics** — See problems solved by difficulty
-- **Real-Time Updates** — Rank updates instantly after each accepted solution
-- **Achievement Badges** — Unlock badges as you reach new tiers
-- **Nearby Competitors** — See where you stand compared to similar-ranked players
-
-### How Points Work
-
-1. ✅ **Solve a Problem** — Write and test your solution
-2. 📊 **Get Accepted** — Your code passes all test cases (visible + hidden)
-3. ⭐ **Earn Points** — Automatic points based on difficulty
-4. 📈 **Rank Up** — Your tier updates when you hit threshold points
-5. 🏆 **Compete** — See your position on the global leaderboard
-
----
-
-## 🤝 Contributing
-
-We welcome contributions! Here's how to get started:
-
-1. **Fork** the repository
-2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
-3. **Commit** your changes (`git commit -m 'Add amazing feature'`)
-4. **Push** to the branch (`git push origin feature/amazing-feature`)
-5. **Open** a Pull Request
-
-**Development Setup:**
-```bash
-# See DEPLOYMENT_GUIDE.md for detailed environment setup
-npm install
 npm run dev
 ```
+Trình duyệt sẽ mở tại địa chỉ `http://localhost:5173`.
+
+### 5. Đóng gói cho môi trường Production (Build)
+```bash
+npm run build
+npm run preview
+```
 
 ---
 
-## 📝 Documentation
+## 🌐 Triển Khai Lên Vercel
 
-| Document | Purpose |
-|----------|---------|
-| [QUICK_DEPLOY.md](./QUICK_DEPLOY.md) | 5-minute deployment quick reference |
-| [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) | Detailed step-by-step deployment |
-| [AI_TESTCASE_GUIDE.md](./AI_TESTCASE_GUIDE.md) | AI test case generation system |
-| [SCORING_SYSTEM_GUIDE.md](./SCORING_SYSTEM_GUIDE.md) | Gamified ranking & points system |
-| [DETAILED_ARCHITECTURE_ANALYSIS.md](./DETAILED_ARCHITECTURE_ANALYSIS.md) | System architecture deep dive |
-| [VERIFICATION_CHECKLIST.md](./VERIFICATION_CHECKLIST.md) | Pre-launch testing checklist |
-
----
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**Q: Code changes not syncing in real-time?**
-- Check WebSocket connection in browser console
-- Verify `VITE_SOCKET_URL` environment variable
-- Restart the backend server
-
-**Q: Code execution times out?**
-- Check Wandbox API quota
-- Verify code doesn't have infinite loops
-- Try with simpler code first
-
-**Q: AI responses are slow?**
-- Check Gemini API quota limits
-- Try with shorter code snippets
-- Verify API key is valid
-
-**Q: Cannot join a room?**
-- Check MongoDB connection
-- Verify JWT_SECRET is set
-- Clear browser cookies and login again
-
-**Q: Why am I not earning points?**
-- Verify your solution status shows "Accepted"
-- Only accepted solutions earn points
-- Check if you've already solved this problem (no double points)
-- Ensure the problem difficulty is set correctly
-
-**Q: How do I check my rank?**
-- Go to `/leaderboard` to see global rankings
-- Visit your Profile to see your personal stats and rank
-- Your position updates in real-time after each accepted solution
-
-**Q: Can I lose points or rank?**
-- No, points are cumulative and only increase
-- Rank is determined by total points and never decreases
-- Failed submissions don't affect your score
+1. Đẩy mã nguồn lên kho lưu trữ GitHub.
+2. Đăng nhập vào [Vercel](https://vercel.com/) và import project.
+3. Cấu hình biến môi trường:
+   - `VITE_API_BASE_URL`: `https://your-backend-domain.com/api`
+   - `VITE_SOCKET_URL`: `https://your-backend-domain.com`
+4. Chọn Framework Preset là **Vite**.
+5. Nhấn **Deploy**.
 
 ---
 
-## 📊 Analytics & Performance
+## 📄 Bản Quyền (License)
 
-CodeRoom uses advanced monitoring to track:
-- **Real-time sync latency**
-- **Code execution performance**
-- **User engagement metrics**
-- **API response times**
-- **Infrastructure health**
-
-Dashboard: (Available for admin users)
-
----
-
-## 🔐 Security & Privacy
-
-- **End-to-End**: All connections encrypted with HTTPS/WSS
-- **Authentication**: JWT tokens with 24-hour expiration
-- **Password Security**: Bcrypt with 12 salt rounds
-- **Rate Limiting**: 100 requests/minute per IP
-- **Data Encryption**: At-rest encryption in MongoDB
-- **Privacy**: No tracking or analytics on user data
-- **Compliance**: GDPR-ready architecture
-
-**Security Report:** Available upon request
-
----
-
-## 💡 Roadmap
-
-### ✅ Q1 2026 - Completed
-- [x] Real-time collaborative code editor
-- [x] Multi-language code execution
-- [x] AI code assistant (Gemini 2.5)
-- [x] Smart hidden test case generation
-- [x] **Gamified ranking system (7 tiers)**
-- [x] **Global leaderboard**
-- [x] **Personal statistics & progress tracking**
-
-### Q2 2026
-- [ ] Multi-cursor conflict resolution
-- [ ] Code diff visualization
-- [ ] Team workspace management
-- [ ] Advanced debugging tools
-
-### Q3 2026
-- [ ] VS Code extension
-- [ ] IDE integration (WebStorm, PyCharm)
-- [ ] Git integration
-- [ ] Premium plans with unlimited features
-
-### Q4 2026
-- [ ] Mobile app (React Native)
-- [ ] Voice collaboration
-- [ ] Advanced analytics dashboard
-- [ ] Enterprise SSO
-
----
-
-## 📞 Support & Community
-
-- **Email**: support@coderoom.dev
-- **Discord**: [Join our community](https://discord.gg/coderoom)
-- **GitHub Issues**: [Report bugs](https://github.com/coderoom/issues)
-- **Twitter**: [@CodeRoomIO](https://twitter.com/CodeRoomIO)
-
----
-
-## 📄 License
-
-This project is licensed under the **MIT License** — see the [LICENSE](./LICENSE) file for details.
-
----
-
-## 🙏 Acknowledgments
-
-Built with ❤️ by the CodeRoom team, powered by:
-- Google Gemini for AI capabilities
-- Wandbox for code execution
-- MongoDB for reliable data storage
-- The open-source community
-
----
-
-<div align="center">
-
-## 🚀 Ready to collaborate?
-
-### [➜ Open CodeRoom: coderoom.vercel.app](https://coderoom.vercel.app/)
-
-*Create a room. Share the link. Change the way you code.*
-
-**CodeRoom** — Where teams code together, instantly.
-
-</div>
-
----
-
-**Last Updated:** May 30, 2026  
-**Version:** 1.1.0 - Ranking System Added
+Dự án được phân phối dưới giấy phép [MIT License](LICENSE).
+Tác giả: [Nguyễn Ngọc Toàn (Toannguyen231)](https://github.com/Toannguyen231)

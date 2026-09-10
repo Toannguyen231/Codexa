@@ -4,9 +4,53 @@ import { FiMail, FiLock, FiUser, FiCode, FiUsers, FiZap, FiCpu, FiEye, FiEyeOff,
 import { SiCodeforces } from 'react-icons/si';
 import './Login.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
+
+const parseJsonResponse = async (res) => {
+  const text = await res.text();
+  if (!text) return {};
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(`Server trả về dữ liệu không hợp lệ (HTTP ${res.status}).`);
+  }
+};
 
 // ─── Animated Particles ───
+// Pt (particle) class — defined OUTSIDE the component/effect so React's
+// react-hooks/unsupported-syntax rule can parse it (inline class in a hook
+// is not supported). It only reads `ctx` passed in at construction time,
+// so hoisting it out does not change any animation behavior.
+class Pt {
+  constructor(ctx, canvas) {
+    this.ctx = ctx;
+    this.canvas = canvas;
+    this.reset();
+  }
+  reset() {
+    this.x = Math.random() * this.canvas.width;
+    this.y = Math.random() * this.canvas.height;
+    this.sz = 1 + Math.random() * 2;
+    this.sx = (Math.random() - 0.5) * 0.3;
+    this.sy = (Math.random() - 0.5) * 0.3;
+    this.o = 0.15 + Math.random() * 0.2;
+    this.c = Math.random() > 0.5 ? [16, 185, 129] : [139, 92, 246];
+  }
+  update() {
+    this.x += this.sx;
+    this.y += this.sy;
+    if (this.x < 0 || this.x > this.canvas.width) this.sx *= -1;
+    if (this.y < 0 || this.y > this.canvas.height) this.sy *= -1;
+  }
+  draw() {
+    this.ctx.beginPath();
+    this.ctx.arc(this.x, this.y, this.sz, 0, Math.PI * 2);
+    this.ctx.fillStyle = `rgba(${this.c[0]},${this.c[1]},${this.c[2]},${this.o})`;
+    this.ctx.fill();
+  }
+}
+
 function ParticleCanvas() {
   const canvasRef = useRef(null);
 
@@ -25,34 +69,7 @@ function ParticleCanvas() {
     resize();
     window.addEventListener('resize', resize);
 
-    class Pt {
-      constructor() {
-        this.reset();
-      }
-      reset() {
-        this.x = Math.random() * canvas.width;
-        this.y = Math.random() * canvas.height;
-        this.sz = 1 + Math.random() * 2;
-        this.sx = (Math.random() - 0.5) * 0.3;
-        this.sy = (Math.random() - 0.5) * 0.3;
-        this.o = 0.15 + Math.random() * 0.2;
-        this.c = Math.random() > 0.5 ? [16, 185, 129] : [139, 92, 246];
-      }
-      update() {
-        this.x += this.sx;
-        this.y += this.sy;
-        if (this.x < 0 || this.x > canvas.width) this.sx *= -1;
-        if (this.y < 0 || this.y > canvas.height) this.sy *= -1;
-      }
-      draw() {
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.sz, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${this.c[0]},${this.c[1]},${this.c[2]},${this.o})`;
-        ctx.fill();
-      }
-    }
-
-    for (let i = 0; i < count; i++) particles.push(new Pt());
+    for (let i = 0; i < count; i++) particles.push(new Pt(ctx, canvas));
 
     function animate() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -209,10 +226,10 @@ const Login = () => {
         body: JSON.stringify(body),
       });
 
-      const data = await res.json();
+      const data = await parseJsonResponse(res);
 
       if (!res.ok) {
-        setError(data.message || 'Có lỗi xảy ra.');
+        setError(data.message || `Có lỗi xảy ra (HTTP ${res.status}).`);
         setLoading(false);
         return;
       }

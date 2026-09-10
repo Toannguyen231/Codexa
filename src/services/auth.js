@@ -10,6 +10,12 @@ const STORAGE_KEYS = {
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
+const parseJsonResponse = async (res) => {
+  const text = await res.text();
+  if (!text) return {};
+  return JSON.parse(text);
+};
+
 // ── Token helpers ────────────────────────────────────────────
 
 export const getAccessToken = () => localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN) || localStorage.getItem('token') || '';
@@ -59,7 +65,9 @@ export const logout = () => {
       method: 'POST',
       credentials: 'include',
     }).catch(() => {});
-  } catch {}
+  } catch {
+    // Ignore logout network errors.
+  }
   window.location.href = '/login';
 };
 
@@ -90,7 +98,7 @@ export const refreshAccessToken = async () => {
         return null;
       }
 
-      const data = await res.json();
+      const data = await parseJsonResponse(res);
       const newToken = data.accessToken || data.token;
       if (newToken) {
         setAccessToken(newToken);

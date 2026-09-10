@@ -12,7 +12,7 @@ import AIPanel from './component/AIPanel/AIPanel';
 import ShareModal from './component/ShareModal';
 import { useRoomManager } from './hooks/useRoomManager';
 import { extractSamples } from './component/Problems/problemUtils';
-import API, { fetchRaw } from './api';
+import API, { fetchRaw, parseResponseBody } from './api';
 
 /**
  * Component: CodeApp
@@ -199,7 +199,7 @@ function CodeApp() {
 
                 let result;
                 try {
-                    result = await res.json();
+                    result = await parseResponseBody(res);
                 } catch {
                     setTestResults(prev => {
                         const newArr = [...prev];

@@ -19,7 +19,7 @@ const RANK_COLORS = {
 const profileCache = {};
 const CACHE_TTL = 60000; // 1 minute
 
-const ProfileHoverCard = ({ userId, username, children }) => {
+const ProfileHoverCard = ({ userId, children }) => {
   const navigate = useNavigate();
   const [visible, setVisible] = useState(false);
   const [profile, setProfile] = useState(null);

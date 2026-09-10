@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './Leaderboard.scss';
 import API from '../../api';
 import { getRankImage } from '../../utils/rankImages';
@@ -19,18 +19,12 @@ const Leaderboard = () => {
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-    const [sortBy, setSortBy] = useState('points'); // points, problems, easyProblems
-    const [filterRank, setFilterRank] = useState('');
+    const [sortBy] = useState('points'); // points, problems, easyProblems
     const [rankStats, setRankStats] = useState({});
 
     const ITEMS_PER_PAGE = 50;
 
-    useEffect(() => {
-        fetchLeaderboard();
-        fetchRankStats();
-    }, [page, sortBy]);
-
-    const fetchLeaderboard = async () => {
+    const fetchLeaderboard = useCallback(async () => {
         try {
             setLoading(true);
             const response = await API.get('/leaderboard', {
@@ -49,7 +43,13 @@ const Leaderboard = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [page]);
+
+    useEffect(() => {
+        fetchLeaderboard();
+        fetchRankStats();
+        fetchCurrentUserRank();
+    }, [page, sortBy, fetchLeaderboard]);
 
     const fetchCurrentUserRank = async () => {
         try {
@@ -71,19 +71,6 @@ const Leaderboard = () => {
         } catch (error) {
             console.error('Error fetching rank stats:', error);
         }
-    };
-
-    const getRankIcon = (rank) => {
-        const icons = {
-            'Sắt': '⚔️',
-            'Đồng': '🥉',
-            'Bạc': '🥈',
-            'Vàng': '🥇',
-            'Tinh Anh': '💜',
-            'Kim Cương': '💎',
-            'Thách Đấu': '👑'
-        };
-        return icons[rank] || '⭐';
     };
 
     const formatPoints = (points) => {
@@ -289,3 +276,6 @@ const Leaderboard = () => {
 };
 
 export default Leaderboard;
+
+
+
